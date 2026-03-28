@@ -1,0 +1,3365 @@
+if getgenv().MiniHub_Running then
+    warn("MiniHub is already running!")
+    return
+end
+
+repeat task.wait() until game:IsLoaded()
+repeat task.wait() until game.GameId ~= 0
+
+-- Fire Roblox notification immediately so user sees Discord link while key prompt is open
+task.spawn(function()
+    task.wait(0.5)
+    setclipboard("https://discord.gg/2ezFB7bH5u")
+    game:GetService("StarterGui"):SetCore("SendNotification", {
+        Title = "Mini Hub — Get Your Key",
+        Text = "Discord link copied! Join discord.gg/2ezFB7bH5u",
+        Duration = 6,
+    })
+end)
+
+local ValidKeys = { "MiniHub2026" }
+local SavedKeyPath = "MiniHub/key.txt"
+
+local function CheckKey()
+    if typeof(writefile) == "function" and typeof(isfile) == "function" then
+        if isfile(SavedKeyPath) then
+            local saved = readfile(SavedKeyPath):gsub("%s+", "")
+            for _, k in ipairs(ValidKeys) do
+                if saved == k then return true end
+            end
+        end
+    end
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "MiniHubKey"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    pcall(function() gui.Parent = game:GetService("CoreGui") end)
+
+    local bg = Instance.new("Frame")
+    bg.Size = UDim2.fromScale(1, 1)
+    bg.BackgroundColor3 = Color3.fromRGB(10, 10, 10)
+    bg.BackgroundTransparency = 0.3
+    bg.Parent = gui
+
+    local box = Instance.new("Frame")
+    box.Size = UDim2.fromOffset(380, 200)
+    box.Position = UDim2.fromScale(0.5, 0.5)
+    box.AnchorPoint = Vector2.new(0.5, 0.5)
+    box.BackgroundColor3 = Color3.fromRGB(18, 18, 18)
+    box.BorderSizePixel = 0
+    box.Parent = bg
+    Instance.new("UICorner", box).CornerRadius = UDim.new(0, 8)
+
+    local title = Instance.new("TextLabel")
+    title.Size = UDim2.new(1, 0, 0, 40)
+    title.Position = UDim2.fromOffset(0, 10)
+    title.BackgroundTransparency = 1
+    title.Text = "Mini Hub — Key System"
+    title.TextColor3 = Color3.fromRGB(48, 255, 106)
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 18
+    title.Parent = box
+
+    local note = Instance.new("TextLabel")
+    note.Size = UDim2.new(1, -20, 0, 30)
+    note.Position = UDim2.fromOffset(10, 50)
+    note.BackgroundTransparency = 1
+    note.Text = "Get your key in our Discord: discord.gg/2ezFB7bH5u"
+    note.TextColor3 = Color3.fromRGB(180, 180, 180)
+    note.Font = Enum.Font.Gotham
+    note.TextSize = 13
+    note.TextWrapped = true
+    note.Parent = box
+
+    local input = Instance.new("TextBox")
+    input.Size = UDim2.new(1, -20, 0, 36)
+    input.Position = UDim2.fromOffset(10, 90)
+    input.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    input.BorderSizePixel = 0
+    input.PlaceholderText = "Enter key..."
+    input.PlaceholderColor3 = Color3.fromRGB(100, 100, 100)
+    input.Text = ""
+    input.TextColor3 = Color3.fromRGB(255, 255, 255)
+    input.Font = Enum.Font.Gotham
+    input.TextSize = 14
+    input.Parent = box
+    Instance.new("UICorner", input).CornerRadius = UDim.new(0, 6)
+
+    local submitBtn = Instance.new("TextButton")
+    submitBtn.Size = UDim2.new(0.48, 0, 0, 36)
+    submitBtn.Position = UDim2.fromOffset(10, 140)
+    submitBtn.BackgroundColor3 = Color3.fromRGB(48, 255, 106)
+    submitBtn.BorderSizePixel = 0
+    submitBtn.Text = "Submit"
+    submitBtn.TextColor3 = Color3.fromRGB(10, 10, 10)
+    submitBtn.Font = Enum.Font.GothamBold
+    submitBtn.TextSize = 14
+    submitBtn.Parent = box
+    Instance.new("UICorner", submitBtn).CornerRadius = UDim.new(0, 6)
+
+    local discordBtn = Instance.new("TextButton")
+    discordBtn.Size = UDim2.new(0.48, 0, 0, 36)
+    discordBtn.Position = UDim2.new(0.52, 0, 0, 140)
+    discordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242)
+    discordBtn.BorderSizePixel = 0
+    discordBtn.Text = "Get Key"
+    discordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    discordBtn.Font = Enum.Font.GothamBold
+    discordBtn.TextSize = 14
+    discordBtn.Parent = box
+    Instance.new("UICorner", discordBtn).CornerRadius = UDim.new(0, 6)
+
+    discordBtn.MouseButton1Click:Connect(function()
+        setclipboard("https://discord.gg/2ezFB7bH5u")
+        game:GetService("StarterGui"):SetCore("SendNotification", {
+            Title = "Mini Hub",
+            Text = "Discord link copied! discord.gg/2ezFB7bH5u",
+            Duration = 4,
+        })
+    end)
+
+    local passed = false
+    local thread = coroutine.running()
+
+    submitBtn.MouseButton1Click:Connect(function()
+        local entered = input.Text:gsub("%s+", "")
+        for _, k in ipairs(ValidKeys) do
+            if entered == k then
+                passed = true
+                if typeof(writefile) == "function" then
+                    pcall(function()
+                        if not isfolder("MiniHub") then makefolder("MiniHub") end
+                        writefile(SavedKeyPath, entered)
+                    end)
+                end
+                gui:Destroy()
+                coroutine.resume(thread)
+                return
+            end
+        end
+        note.Text = "❌ Invalid key. Get yours at discord.gg/2ezFB7bH5u"
+        note.TextColor3 = Color3.fromRGB(255, 80, 80)
+    end)
+
+    coroutine.yield()
+    return passed
+end
+
+if not CheckKey() then return end
+
+function missing(t, f, fallback)
+    if type(f) == t then return f end
+    return fallback
+end
+
+cloneref = missing("function", cloneref, function(...) return ... end)
+getgc = missing("function", getgc or get_gc_objects)
+getconnections = missing("function", getconnections or get_signal_cons)
+
+Services = setmetatable({}, {
+    __index = function(self, name)
+        local success, cache = pcall(function()
+            return cloneref(game:GetService(name))
+        end)
+        if success then
+            rawset(self, name, cache)
+            return cache
+        else
+            error("Invalid Service: " .. tostring(name))
+        end
+    end
+})
+
+local Players = Services.Players
+local Plr = Players.LocalPlayer
+local Char = Plr.Character or Plr.CharacterAdded:Wait()
+local PGui = Plr:WaitForChild("PlayerGui")
+local Lighting = game:GetService("Lighting")
+
+local RS = Services.ReplicatedStorage
+local RunService = Services.RunService
+local HttpService = Services.HttpService
+local GuiService = Services.GuiService
+local TeleportService = Services.TeleportService
+local Marketplace = Services.MarketplaceService
+local UIS = Services.UserInputService
+local VirtualUser = Services.VirtualUser
+
+local v, Asset = pcall(function()
+    return Marketplace:GetProductInfo(game.PlaceId)
+end)
+
+local gameName = "sailor piece"
+if v and Asset then gameName = Asset.Name end
+
+local Support = {
+    Webhook = (typeof(request) == "function" or typeof(http_request) == "function"),
+    Clipboard = (typeof(setclipboard) == "function"),
+    FileIO = (typeof(writefile) == "function" and typeof(isfile) == "function"),
+    QueueOnTeleport = (typeof(queue_on_teleport) == "function"),
+    Connections = (typeof(getconnections) == "function"),
+    FPS = (typeof(setfpscap) == "function"),
+    Proximity = (typeof(fireproximityprompt) == "function"),
+}
+
+local executorName = (identifyexecutor and identifyexecutor() or "Unknown"):lower()
+local isXeno = string.find(executorName, "xeno") ~= nil
+local LimitedExecutors = {"xeno"}
+local isLimitedExecutor = false
+for _, name in ipairs(LimitedExecutors) do
+    if string.find(executorName, name) then isLimitedExecutor = true break end
+end
+
+local repo = "https://raw.githubusercontent.com/deividcomsono/Obsidian/main/"
+local Library = loadstring(game:HttpGet(repo .. "Library.lua"))()
+local ThemeManager = loadstring(game:HttpGet(repo .. "addons/ThemeManager.lua"))()
+local SaveManager = loadstring(game:HttpGet(repo .. "addons/SaveManager.lua"))()
+
+getgenv().MiniHub_Running = true
+
+local Options = Library.Options
+local Toggles = Library.Toggles
+
+Library.ForceCheckbox = true
+Library.ShowToggleFrameInKeybinds = true
+
+-- Priority system
+local PriorityTasks = {"Boss", "Pity Boss", "Summon [Other]", "Summon", "Level Farm", "All Mob Farm", "Mob", "Merchant", "Alt Help"}
+local DefaultPriority = {"Boss", "Pity Boss", "Summon [Other]", "Summon", "Level Farm", "All Mob Farm", "Mob", "Merchant", "Alt Help"}
+
+local TargetGroupId = 1002185259
+local BannedRanks = {255, 254, 175, 150}
+local NewItemsBuffer = {}
+
+local Shared = {
+    GlobalPrio = "FARM",
+    Cached = { Inv = {}, Accessories = {}, RawWeapCache = { Sword = {}, Melee = {} } },
+    Farm = true,
+    Recovering = false,
+    MovingIsland = false,
+    Island = "",
+    Target = nil,
+    KillTick = 0,
+    TargetValid = false,
+    QuestNPC = "",
+    MobIdx = 1,
+    AllMobIdx = 1,
+    WeapRotationIdx = 1,
+    ComboIdx = 1,
+    ParsedCombo = {},
+    RawWeapCache = { Sword = {}, Melee = {} },
+    ActiveWeap = "",
+    ArmHaki = false,
+    BossTIMap = {},
+    InventorySynced = false,
+    Stats = {},
+    Settings = {},
+    GemStats = {},
+    SkillTree = { Nodes = {}, Points = 0 },
+    Passives = {},
+    SpecStatsSlider = {},
+    ArtifactSession = { Inventory = {}, Dust = 0, InvCount = 0 },
+    UpBlacklist = {},
+    MerchantBusy = false,
+    LocalMerchantTime = 0,
+    LastTimerTick = tick(),
+    MerchantExecute = false,
+    FirstMerchantSync = false,
+    CurrentStock = {},
+    LastM1 = 0,
+    LastWRSwitch = 0,
+    LastSwitch = { Title = "", Rune = "" },
+    LastBuildSwitch = 0,
+    LastDungeon = 0,
+    AltDamage = {},
+    AltActive = false,
+    TradeState = {},
+}
+
+local SessionStart = os.time()
+local StartStats = {
+    Level = Plr.Data.Level.Value,
+    Money = Plr.Data.Money.Value,
+    Gems = Plr.Data.Gems.Value,
+    Bounty = (Plr:FindFirstChild("leaderstats") and Plr.leaderstats:FindFirstChild("Bounty") and Plr.leaderstats.Bounty.Value) or 0
+}
+
+local function GetSessionTime()
+    local seconds = os.time() - SessionStart
+    local hours = math.floor(seconds / 3600)
+    local mins = math.floor((seconds % 3600) / 60)
+    return string.format("%dh %02dm", hours, mins)
+end
+
+local function GetSafeModule(parent, name)
+    local obj = parent:FindFirstChild(name)
+    if obj and obj:IsA("ModuleScript") then
+        local success, result = pcall(require, obj)
+        if success then return result end
+    end
+    return nil
+end
+
+local function GetRemote(parent, pathString)
+    local current = parent
+    for _, name in ipairs(pathString:split(".")) do
+        if not current then return nil end
+        current = current:FindFirstChild(name)
+    end
+    return current
+end
+
+local function SafeInvoke(remote, ...)
+    local args = {...}
+    local result = nil
+    task.spawn(function()
+        local success, res = pcall(function()
+            return remote:InvokeServer(unpack(args))
+        end)
+        result = res
+    end)
+    local start = tick()
+    repeat task.wait() until result ~= nil or (tick() - start) > 2
+    return result
+end
+
+local function fire_event(signal, ...)
+    if firesignal then
+        return firesignal(signal, ...)
+    elseif getconnections then
+        for _, connection in ipairs(getconnections(signal)) do
+            if connection.Function then task.spawn(connection.Function, ...) end
+        end
+    end
+end
+
+local _DR = GetRemote(RS, "RemoteEvents.DashRemote")
+local _FS = (_DR and _DR.FireServer)
+
+local Remotes = {
+    SettingsToggle = GetRemote(RS, "RemoteEvents.SettingsToggle"),
+    SettingsSync = GetRemote(RS, "RemoteEvents.SettingsSync"),
+    UseCode = GetRemote(RS, "RemoteEvents.CodeRedeem"),
+    M1 = GetRemote(RS, "CombatSystem.Remotes.RequestHit"),
+    EquipWeapon = GetRemote(RS, "Remotes.EquipWeapon"),
+    UseSkill = GetRemote(RS, "AbilitySystem.Remotes.RequestAbility"),
+    UseFruit = GetRemote(RS, "RemoteEvents.FruitPowerRemote"),
+    QuestAccept = GetRemote(RS, "RemoteEvents.QuestAccept"),
+    QuestAbandon = GetRemote(RS, "RemoteEvents.QuestAbandon"),
+    UseItem = GetRemote(RS, "Remotes.UseItem"),
+    SlimeCraft = GetRemote(RS, "Remotes.RequestSlimeCraft"),
+    GrailCraft = GetRemote(RS, "Remotes.RequestGrailCraft"),
+    RerollSingleStat = GetRemote(RS, "Remotes.RerollSingleStat"),
+    SkillTreeUpgrade = GetRemote(RS, "RemoteEvents.SkillTreeUpgrade"),
+    Enchant = GetRemote(RS, "Remotes.EnchantAccessory"),
+    Blessing = GetRemote(RS, "Remotes.BlessWeapon"),
+    ArtifactSync = GetRemote(RS, "RemoteEvents.ArtifactDataSync"),
+    ArtifactClaim = GetRemote(RS, "RemoteEvents.ArtifactMilestoneClaimReward"),
+    MassDelete = GetRemote(RS, "RemoteEvents.ArtifactMassDeleteByUUIDs"),
+    MassUpgrade = GetRemote(RS, "RemoteEvents.ArtifactMassUpgrade"),
+    ArtifactLock = GetRemote(RS, "RemoteEvents.ArtifactLock"),
+    ArtifactUnequip = GetRemote(RS, "RemoteEvents.ArtifactUnequip"),
+    ArtifactEquip = GetRemote(RS, "RemoteEvents.ArtifactEquip"),
+    Roll_Trait = GetRemote(RS, "RemoteEvents.TraitReroll"),
+    TraitAutoSkip = GetRemote(RS, "RemoteEvents.TraitUpdateAutoSkip"),
+    TraitConfirm = GetRemote(RS, "RemoteEvents.TraitConfirm"),
+    SpecPassiveReroll = GetRemote(RS, "RemoteEvents.SpecPassiveReroll"),
+    ArmHaki = GetRemote(RS, "RemoteEvents.HakiRemote"),
+    ObserHaki = GetRemote(RS, "RemoteEvents.ObservationHakiRemote"),
+    ConquerorHaki = GetRemote(RS, "Remotes.ConquerorHakiRemote"),
+    TP_Portal = GetRemote(RS, "Remotes.TeleportToPortal"),
+    OpenDungeon = GetRemote(RS, "Remotes.RequestDungeonPortal"),
+    DungeonWaveVote = GetRemote(RS, "Remotes.DungeonWaveVote"),
+    EquipTitle = GetRemote(RS, "RemoteEvents.TitleEquip"),
+    TitleUnequip = GetRemote(RS, "RemoteEvents.TitleUnequip"),
+    EquipRune = GetRemote(RS, "Remotes.EquipRune"),
+    LoadoutLoad = GetRemote(RS, "RemoteEvents.LoadoutLoad"),
+    AddStat = GetRemote(RS, "RemoteEvents.AllocateStat"),
+    OpenMerchant = GetRemote(RS, "Remotes.MerchantRemotes.OpenMerchantUI"),
+    MerchantBuy = GetRemote(RS, "Remotes.MerchantRemotes.PurchaseMerchantItem"),
+    ValentineBuy = GetRemote(RS, "Remotes.ValentineMerchantRemotes.PurchaseValentineMerchantItem"),
+    StockUpdate = GetRemote(RS, "Remotes.MerchantRemotes.MerchantStockUpdate"),
+    SummonBoss = GetRemote(RS, "Remotes.RequestSummonBoss"),
+    JJKSummonBoss = GetRemote(RS, "Remotes.RequestSpawnStrongestBoss"),
+    RimuruBoss = GetRemote(RS, "RemoteEvents.RequestSpawnRimuru"),
+    AnosBoss = GetRemote(RS, "Remotes.RequestSpawnAnosBoss"),
+    TrueAizenBoss = GetRemote(RS, "RemoteEvents.RequestSpawnTrueAizen"),
+    AtomicBoss = GetRemote(RS, "RemoteEvents.RequestSpawnAtomic"),
+    ReqInventory = GetRemote(RS, "Remotes.RequestInventory"),
+    Ascend = GetRemote(RS, "RemoteEvents.RequestAscend"),
+    ReqAscend = GetRemote(RS, "RemoteEvents.GetAscendData"),
+    CloseAscend = GetRemote(RS, "RemoteEvents.CloseAscendUI"),
+    TradeRespond = GetRemote(RS, "Remotes.TradeRemotes.RespondToRequest"),
+    TradeSend = GetRemote(RS, "Remotes.TradeRemotes.SendTradeRequest"),
+    TradeAddItem = GetRemote(RS, "Remotes.TradeRemotes.AddItemToTrade"),
+    TradeReady = GetRemote(RS, "Remotes.TradeRemotes.SetReady"),
+    TradeConfirm = GetRemote(RS, "Remotes.TradeRemotes.ConfirmTrade"),
+    TradeUpdated = GetRemote(RS, "Remotes.TradeRemotes.TradeUpdated"),
+    HakiStateUpdate = GetRemote(RS, "RemoteEvents.HakiStateUpdate"),
+    UpCurrency = GetRemote(RS, "RemoteEvents.UpdateCurrency"),
+    UpInventory = GetRemote(RS, "Remotes.UpdateInventory"),
+    UpPlayerStats = GetRemote(RS, "RemoteEvents.UpdatePlayerStats"),
+    UpAscend = GetRemote(RS, "RemoteEvents.AscendDataUpdate"),
+    UpStatReroll = GetRemote(RS, "RemoteEvents.StatRerollUpdate"),
+    SpecPassiveUpdate = GetRemote(RS, "RemoteEvents.SpecPassiveDataUpdate"),
+    SpecPassiveSkip = GetRemote(RS, "RemoteEvents.SpecPassiveUpdateAutoSkip"),
+    UpSkillTree = GetRemote(RS, "RemoteEvents.SkillTreeUpdate"),
+    BossUIUpdate = GetRemote(RS, "Remotes.BossUIUpdate"),
+    TitleSync = GetRemote(RS, "RemoteEvents.TitleDataSync"),
+}
+
+local Modules = {
+    BossConfig = GetSafeModule(RS.Modules, "BossConfig") or {Bosses = {}},
+    TimedConfig = GetSafeModule(RS.Modules, "TimedBossConfig"),
+    SummonConfig = GetSafeModule(RS.Modules, "SummonableBossConfig"),
+    Merchant = GetSafeModule(RS.Modules, "MerchantConfig") or {ITEMS = {}},
+    ValentineConfig = GetSafeModule(RS.Modules, "ValentineMerchantConfig"),
+    DungeonMerchantConfig = GetSafeModule(RS.Modules, "DungeonMerchantConfig"),
+    InfiniteTowerMerchantConfig = GetSafeModule(RS.Modules, "InfiniteTowerMerchantConfig"),
+    BossRushMerchantConfig = GetSafeModule(RS.Modules, "BossRushMerchantConfig"),
+    Title = GetSafeModule(RS.Modules, "TitlesConfig") or {},
+    Quests = GetSafeModule(RS.Modules, "QuestConfig") or {RepeatableQuests = {}, Questlines = {}},
+    WeaponClass = GetSafeModule(RS.Modules, "WeaponClassification") or {Tools = {}},
+    Fruits = GetSafeModule(RS:FindFirstChild("FruitPowerSystem") or game, "FruitPowerConfig") or {Powers = {}},
+    ArtifactConfig = GetSafeModule(RS.Modules, "ArtifactConfig"),
+    Stats = GetSafeModule(RS.Modules, "StatRerollConfig"),
+    Codes = GetSafeModule(RS, "CodesConfig") or {Codes = {}},
+    ItemRarity = GetSafeModule(RS.Modules, "ItemRarityConfig"),
+    Trait = GetSafeModule(RS.Modules, "TraitConfig") or {Traits = {}},
+    Race = GetSafeModule(RS.Modules, "RaceConfig") or {Races = {}},
+    Clan = GetSafeModule(RS.Modules, "ClanConfig") or {Clans = {}},
+    SpecPassive = GetSafeModule(RS.Modules, "SpecPassiveConfig"),
+    SkillTree = GetSafeModule(RS.Modules, "SkillTreeConfig"),
+    InfiniteTower = GetSafeModule(RS.Modules, "InfiniteTowerConfig"),
+}
+
+local MerchantItemList = Modules.Merchant.ITEMS
+local SortedTitleList = Modules.Title:GetSortedTitleIds()
+
+local PATH = {
+    Mobs = workspace:WaitForChild("NPCs"),
+    InteractNPCs = workspace:WaitForChild("ServiceNPCs"),
+}
+
+local function GetServiceNPC(name)
+    return PATH.InteractNPCs:FindFirstChild(name)
+end
+
+local NPCs = {
+    Merchant = {
+        Regular = GetServiceNPC("MerchantNPC"),
+        Dungeon = GetServiceNPC("DungeonMerchantNPC"),
+        Valentine = GetServiceNPC("ValentineMerchantNPC"),
+        InfiniteTower = GetServiceNPC("InfiniteTowerMerchantNPC"),
+        BossRush = GetServiceNPC("BossRushMerchantNPC"),
+    }
+}
+
+local UI = {
+    Merchant = {
+        Regular = PGui:WaitForChild("MerchantUI"),
+        Dungeon = PGui:WaitForChild("DungeonMerchantUI"),
+        Valentine = PGui:FindFirstChild("ValentineMerchantUI"),
+        InfiniteTower = PGui:FindFirstChild("InfiniteTowerMerchantUI"),
+        BossRush = PGui:FindFirstChild("BossRushMerchantUI"),
+    }
+}
+
+local pingUI = PGui:WaitForChild("QuestPingUI")
+local SummonMap = {}
+
+local function GetRemoteBossArg(name)
+    local map = {
+        ["strongestinhistory"] = "StrongestHistory",
+        ["strongestoftoday"] = "StrongestToday",
+        ["strongesthistory"] = "StrongestHistory",
+        ["strongesttoday"] = "StrongestToday",
+    }
+    return map[name:lower()] or name
+end
+
+local IslandCrystals = {
+    ["Starter"] = workspace:FindFirstChild("StarterIsland") and workspace.StarterIsland:FindFirstChild("SpawnPointCrystal_Starter"),
+    ["Jungle"] = workspace:FindFirstChild("JungleIsland") and workspace.JungleIsland:FindFirstChild("SpawnPointCrystal_Jungle"),
+    ["Desert"] = workspace:FindFirstChild("DesertIsland") and workspace.DesertIsland:FindFirstChild("SpawnPointCrystal_Desert"),
+    ["Snow"] = workspace:FindFirstChild("SnowIsland") and workspace.SnowIsland:FindFirstChild("SpawnPointCrystal_Snow"),
+    ["Sailor"] = workspace:FindFirstChild("SailorIsland") and workspace.SailorIsland:FindFirstChild("SpawnPointCrystal_Sailor"),
+    ["Shibuya"] = workspace:FindFirstChild("ShibuyaStation") and workspace.ShibuyaStation:FindFirstChild("SpawnPointCrystal_Shibuya"),
+    ["HuecoMundo"] = workspace:FindFirstChild("HuecoMundo") and workspace.HuecoMundo:FindFirstChild("SpawnPointCrystal_HuecoMundo"),
+    ["Boss"] = workspace:FindFirstChild("BossIsland") and workspace.BossIsland:FindFirstChild("SpawnPointCrystal_Boss"),
+    ["Dungeon"] = workspace:FindFirstChild("Main Temple") and workspace["Main Temple"]:FindFirstChild("SpawnPointCrystal_Dungeon"),
+    ["Shinjuku"] = workspace:FindFirstChild("ShinjukuIsland") and workspace.ShinjukuIsland:FindFirstChild("SpawnPointCrystal_Shinjuku"),
+    ["Valentine"] = workspace:FindFirstChild("ValentineIsland") and workspace.ValentineIsland:FindFirstChild("SpawnPointCrystal_Valentine"),
+    ["Slime"] = workspace:FindFirstChild("SlimeIsland") and workspace.SlimeIsland:FindFirstChild("SpawnPointCrystal_Slime"),
+    ["Academy"] = workspace:FindFirstChild("AcademyIsland") and workspace.AcademyIsland:FindFirstChild("SpawnPointCrystal_Academy"),
+    ["Judgement"] = workspace:FindFirstChild("JudgementIsland") and workspace.JudgementIsland:FindFirstChild("SpawnPointCrystal_Judgement"),
+    ["SoulDominion"] = workspace:FindFirstChild("SoulDominionIsland") and workspace.SoulDominionIsland:FindFirstChild("SpawnPointCrystal_SoulDominion"),
+    ["NinjaIsland"] = workspace:FindFirstChild("NinjaIsland") and workspace.NinjaIsland:FindFirstChild("SpawnPointCrystal_Ninja"),
+    ["LawlessIsland"] = workspace:FindFirstChild("LawlessIsland") and workspace.LawlessIsland:FindFirstChild("SpawnPointCrystal_Lawless"),
+    ["TowerIsland"] = workspace:FindFirstChild("TowerIsland") and workspace.TowerIsland:FindFirstChild("SpawnPointCrystal_Tower"),
+}
+
+local Connections = {
+    General = nil,
+    Idled = nil,
+    Shop = nil,
+    Dash = nil,
+    Knockback = {},
+    Reconnect = nil,
+}
+
+local Lists = {
+    AscendLabels = {},
+    DiffList = {"Normal", "Medium", "Hard", "Extreme"},
+    MobList = {},
+    MiniBossList = {"ThiefBoss", "MonkeyBoss", "DesertBoss", "SnowBoss", "PandaMiniBoss"},
+    BossList = {},
+    AllBossList = {},
+    AllNPCList = {},
+    AllEntitiesList = {},
+    SummonList = {},
+    OtherSummonList = {"StrongestHistory", "StrongestToday", "Rimuru", "Anos", "TrueAizen", "Atomic", "AbyssalEmpress"},
+    WeaponTypes = {"Melee", "Sword", "Power"},
+    ManualWeaponClass = {
+        ["Invisible"] = "Power",
+        ["Bomb"] = "Power",
+        ["Quake"] = "Power",
+    },
+    ShopList = {},
+    ValentineShopList = {},
+    Rarities = {"Common", "Rare", "Epic", "Legendary", "Mythical", "Secret", "Aura Crate", "Cosmetic Crate"},
+    CraftList = {"SlimeKey", "DivineGrail"},
+    UnlockedTitle = {},
+    TitleCategory = {"None", "Best EXP", "Best Money & Gem", "Best Luck", "Best DMG"},
+    TitleList = {},
+    LoadoutList = {"1", "2", "3", "4", "5", "None"},
+    TraitList = {},
+    RarityWeight = {
+        ["Secret"] = 1, ["Mythical"] = 2, ["Legendary"] = 3,
+        ["Epic"] = 4, ["Rare"] = 5, ["Uncommon"] = 6, ["Common"] = 7
+    },
+    RaceList = {},
+    ClanList = {},
+    RuneList = {"None"},
+    SpecPassive = {},
+    GemStat = Modules.Stats.StatKeys,
+    GemRank = Modules.Stats.RankOrder,
+    OwnedWeapon = {},
+    AllOwnedWeapons = {},
+    OwnedAccessory = {},
+    QuestlineList = {},
+    OwnedItem = {},
+    IslandList = {"Starter", "Jungle", "Desert", "Snow", "Sailor", "Shibuya", "HuecoMundo", "Boss", "Dungeon", "Shinjuku", "Valentine", "Slime", "Academy", "Judgement", "SoulSociety", "Tower"},
+    NPC_QuestList = {"DungeonUnlock", "SlimeKeyUnlock"},
+    NPC_MiscList = {"Artifacts", "Blessing", "Enchant", "SkillTree", "Cupid", "ArmHaki", "Observation", "Conqueror"},
+    DungeonList = {"CidDungeon", "RuneDungeon", "DoubleDungeon", "BossRush", "InfiniteTower"},
+    NPC_MovesetList = {},
+    NPC_MasteryList = {},
+    MobToIsland = {}
+}
+
+local allArtSets = {}
+for setName, _ in pairs(Modules.ArtifactConfig.Sets) do table.insert(allArtSets, setName) end
+
+local allArtStats = {}
+for statKey, _ in pairs(Modules.ArtifactConfig.Stats) do table.insert(allArtStats, statKey) end
+
+if Modules.TimedConfig and Modules.TimedConfig.Bosses then
+    for _, data in pairs(Modules.TimedConfig.Bosses) do
+        table.insert(Lists.BossList, data.displayName)
+        local tpName = data.spawnLocation:gsub(" Island", ""):gsub(" Station", "")
+        if data.spawnLocation == "Hueco Mundo Island" then tpName = "HuecoMundo" end
+        if data.spawnLocation == "Judgement Island" then tpName = "Judgement" end
+        Shared.BossTIMap[data.displayName] = tpName
+    end
+    table.sort(Lists.BossList)
+end
+
+if Modules.SummonConfig and Modules.SummonConfig.Bosses then
+    table.clear(Lists.SummonList)
+    for _, data in pairs(Modules.SummonConfig.Bosses) do
+        table.insert(Lists.SummonList, data.displayName)
+        SummonMap[data.displayName] = data.bossId
+    end
+    table.sort(Lists.SummonList)
+    if Options.PickSummon then Options.PickSummon:SetValues(Lists.SummonList) end
+end
+
+for bossInternalName, _ in pairs(Modules.BossConfig.Bosses) do
+    local clean = bossInternalName:gsub("Boss$", "")
+    table.insert(Lists.AllBossList, clean)
+end
+table.sort(Lists.AllBossList)
+
+for itemName in pairs(MerchantItemList) do table.insert(Lists.ShopList, itemName) end
+
+if Modules.DungeonMerchantConfig and Modules.DungeonMerchantConfig.ITEMS then
+    Lists.DungeonShopList = {}
+    for itemName in pairs(Modules.DungeonMerchantConfig.ITEMS) do table.insert(Lists.DungeonShopList, itemName) end
+    table.sort(Lists.DungeonShopList)
+end
+
+if Modules.InfiniteTowerMerchantConfig and Modules.InfiniteTowerMerchantConfig.ITEMS then
+    Lists.TowerShopList = {}
+    for itemName in pairs(Modules.InfiniteTowerMerchantConfig.ITEMS) do table.insert(Lists.TowerShopList, itemName) end
+    table.sort(Lists.TowerShopList)
+end
+
+if Modules.BossRushMerchantConfig and Modules.BossRushMerchantConfig.ITEMS then
+    Lists.RushShopList = {}
+    for itemName in pairs(Modules.BossRushMerchantConfig.ITEMS) do table.insert(Lists.RushShopList, itemName) end
+    table.sort(Lists.RushShopList)
+end
+
+local function GetBestTitle(category)
+    if #Lists.UnlockedTitle == 0 then return nil end
+    local statMap = {
+        ["Best EXP"] = "XPPercent", ["Best Money & Gem"] = "MoneyPercent",
+        ["Best Luck"] = "LuckPercent", ["Best DMG"] = "DamagePercent"
+    }
+    local targetStat = statMap[category]
+    if not targetStat then return nil end
+    local bestId, highestVal = nil, -1
+    for _, titleId in ipairs(Lists.UnlockedTitle) do
+        local data = Modules.Title.Titles[titleId]
+        if data and data.statBonuses and data.statBonuses[targetStat] then
+            local val = data.statBonuses[targetStat]
+            if val > highestVal then highestVal = val bestId = titleId end
+        end
+    end
+    return bestId
+end
+
+for _, v in ipairs(SortedTitleList) do table.insert(Lists.TitleList, v) end
+
+local CombinedTitleList = {}
+for _, cat in ipairs(Lists.TitleCategory) do table.insert(CombinedTitleList, cat) end
+for _, title in ipairs(Lists.TitleList) do table.insert(CombinedTitleList, title) end
+
+table.clear(Lists.TraitList)
+for name, _ in pairs(Modules.Trait.Traits) do table.insert(Lists.TraitList, name) end
+table.sort(Lists.TraitList, function(a, b)
+    local rA = Modules.Trait.Traits[a].Rarity
+    local rB = Modules.Trait.Traits[b].Rarity
+    if rA ~= rB then return (Lists.RarityWeight[rA] or 99) < (Lists.RarityWeight[rB] or 99) end
+    return a < b
+end)
+
+table.clear(Lists.RaceList)
+for name, _ in pairs(Modules.Race.Races) do table.insert(Lists.RaceList, name) end
+table.sort(Lists.RaceList, function(a, b)
+    local rA = Modules.Race.Races[a].rarity
+    local rB = Modules.Race.Races[b].rarity
+    if rA ~= rB then return (Lists.RarityWeight[rA] or 99) < (Lists.RarityWeight[rB] or 99) end
+    return a < b
+end)
+
+table.clear(Lists.ClanList)
+for name, _ in pairs(Modules.Clan.Clans) do table.insert(Lists.ClanList, name) end
+table.sort(Lists.ClanList, function(a, b)
+    local rA = Modules.Clan.Clans[a].rarity
+    local rB = Modules.Clan.Clans[b].rarity
+    if rA ~= rB then return (Lists.RarityWeight[rA] or 99) < (Lists.RarityWeight[rB] or 99) end
+    return a < b
+end)
+
+if Modules.SpecPassive and Modules.SpecPassive.Passives then
+    for name, _ in pairs(Modules.SpecPassive.Passives) do table.insert(Lists.SpecPassive, name) end
+    table.sort(Lists.SpecPassive)
+end
+
+for k, _ in pairs(Modules.Quests.Questlines) do table.insert(Lists.QuestlineList, k) end
+table.sort(Lists.QuestlineList)
+
+for _, v in ipairs(PATH.InteractNPCs:GetChildren()) do table.insert(Lists.AllNPCList, v.Name) end
+
+local ActiveThreads = {}
+
+local function Cleanup(tbl)
+    for key, value in pairs(tbl) do
+        if typeof(value) == "RBXScriptConnection" then value:Disconnect() tbl[key] = nil
+        elseif typeof(value) == "thread" then task.cancel(value) tbl[key] = nil
+        elseif type(value) == "table" then Cleanup(value) end
+    end
+end
+
+function Thread(featurePath, featureFunc, isEnabled, ...)
+    local pathParts = featurePath:split(".")
+    local currentTable = ActiveThreads
+    for i = 1, #pathParts - 1 do
+        local part = pathParts[i]
+        if not currentTable[part] then currentTable[part] = {} end
+        currentTable = currentTable[part]
+    end
+    local flagKey = pathParts[#pathParts]
+    local activeThread = currentTable[flagKey]
+    if isEnabled then
+        if not activeThread or coroutine.status(activeThread) == "dead" then
+            currentTable[flagKey] = task.spawn(featureFunc, ...)
+        end
+    else
+        if activeThread and typeof(activeThread) == "thread" then
+            task.cancel(activeThread)
+            currentTable[flagKey] = nil
+        end
+    end
+end
+
+local function SafeLoop(name, func)
+    return function()
+        local ok, err = pcall(func)
+        if not ok then
+            Library:Notify("Error ["..name.."]: "..tostring(err), 10)
+            warn("Error ["..name.."]: "..tostring(err))
+        end
+    end
+end
+
+local function Comma(n)
+    local s = tostring(n)
+    return s:reverse():gsub("%d%d%d", "%1,"):reverse():gsub("^,", "")
+end
+
+local function Short(n)
+    local abbrev = {{1e12,"T"},{1e9,"B"},{1e6,"M"},{1e3,"K"}}
+    for _, v in ipairs(abbrev) do
+        if n >= v[1] then return string.format("%.1f%s", n/v[1], v[2]) end
+    end
+    return tostring(n)
+end
+
+local function GetCharacter()
+    local c = Plr.Character
+    return (c and c:FindFirstChild("HumanoidRootPart") and c:FindFirstChildOfClass("Humanoid")) and c or nil
+end
+
+local function PanicStop()
+    Shared.Farm = false
+    Shared.AltActive = false
+    Shared.GlobalPrio = "FARM"
+    Shared.Target = nil
+    Shared.MovingIsland = false
+    for _, toggle in pairs(Toggles) do
+        if toggle.SetValue then toggle:SetValue(false) end
+    end
+    local char = GetCharacter()
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if root then
+        root.AssemblyLinearVelocity = Vector3.zero
+        root.AssemblyAngularVelocity = Vector3.zero
+        root.CFrame = root.CFrame * CFrame.new(0, 2, 0)
+    end
+    task.delay(0.5, function() Shared.Farm = true end)
+    Library:Notify("All features stopped.", 5)
+end
+
+local function FuncSpeed()
+    while true do
+        local delta = RunService.Heartbeat:Wait()
+        local char = GetCharacter()
+        local hum = char and char:FindFirstChildOfClass("Humanoid")
+        if char and hum and hum.Health > 0 then
+            if hum.MoveDirection.Magnitude > 0 then
+                char:TranslateBy(hum.MoveDirection * Options.TPWValue.Value * delta * 10)
+            end
+        end
+    end
+end
+
+local function FuncNoclip()
+    while Toggles.Noclip.Value do
+        RunService.Stepped:Wait()
+        local char = GetCharacter()
+        if char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") and part.CanCollide then part.CanCollide = false end
+            end
+        end
+    end
+end
+
+local function FuncAntiKB()
+    if type(Connections.Knockback) == "table" then
+        for _, conn in pairs(Connections.Knockback) do if conn then conn:Disconnect() end end
+        table.clear(Connections.Knockback)
+    else
+        Connections.Knockback = {}
+    end
+    local function ApplyAntiKB(character)
+        if not character then return end
+        local root = character:WaitForChild("HumanoidRootPart", 10)
+        if root then
+            local conn = root.ChildAdded:Connect(function(child)
+                if not Toggles.AntiKnockback.Value then return end
+                if child:IsA("BodyVelocity") and child.MaxForce == Vector3.new(40000,40000,40000) then child:Destroy() end
+            end)
+            table.insert(Connections.Knockback, conn)
+        end
+    end
+    if Plr.Character then ApplyAntiKB(Plr.Character) end
+    local charConn = Plr.CharacterAdded:Connect(ApplyAntiKB)
+    table.insert(Connections.Knockback, charConn)
+    repeat task.wait(1) until not Toggles.AntiKnockback.Value
+    for _, conn in pairs(Connections.Knockback) do if conn then conn:Disconnect() end end
+    table.clear(Connections.Knockback)
+end
+
+local function DisableIdled()
+    pcall(function()
+        local cons = getconnections or get_signal_cons
+        if cons then
+            for _, v in pairs(cons(Plr.Idled)) do
+                if v.Disable then v:Disable() elseif v.Disconnect then v:Disconnect() end
+            end
+        end
+    end)
+end
+
+local function FuncAutoReconnect()
+    if Connections.Reconnect then Connections.Reconnect:Disconnect() end
+    Connections.Reconnect = GuiService.ErrorMessageChanged:Connect(function()
+        if not Toggles.AutoReconnect.Value then return end
+        task.delay(2, function()
+            pcall(function()
+                local promptOverlay = game:GetService("CoreGui"):FindFirstChild("RobloxPromptGui")
+                if promptOverlay then
+                    local errorPrompt = promptOverlay.promptOverlay:FindFirstChild("ErrorPrompt")
+                    if errorPrompt and errorPrompt.Visible then
+                        task.wait(5)
+                        TeleportService:Teleport(game.PlaceId, Plr)
+                    end
+                end
+            end)
+        end)
+    end)
+end
+
+local function FuncNoPause()
+    while Toggles.NoGameplayPaused.Value do
+        pcall(function()
+            local pauseGui = game:GetService("CoreGui").RobloxGui:FindFirstChild("CoreScripts/NetworkPause")
+            if pauseGui then pauseGui:Destroy() end
+        end)
+        task.wait(1)
+    end
+end
+
+local function ApplyFPSBoost(state)
+    if not state then return end
+    pcall(function()
+        Lighting.GlobalShadows = false
+        Lighting.FogEnd = 9e9
+        Lighting.Brightness = 1
+        for _, v in pairs(Lighting:GetChildren()) do
+            if v:IsA("PostProcessEffect") or v:IsA("BloomEffect") or v:IsA("BlurEffect") or v:IsA("SunRaysEffect") then
+                v.Enabled = false
+            end
+        end
+        task.spawn(function()
+            for i, v in pairs(workspace:GetDescendants()) do
+                if Toggles.FPSBoost and not Toggles.FPSBoost.Value then break end
+                pcall(function()
+                    if v:IsA("BasePart") then v.Material = Enum.Material.SmoothPlastic v.CastShadow = false
+                    elseif v:IsA("Decal") or v:IsA("Texture") then v:Destroy()
+                    elseif v:IsA("ParticleEmitter") or v:IsA("Trail") or v:IsA("Beam") then v.Enabled = false end
+                end)
+                if i % 500 == 0 then task.wait() end
+            end
+        end)
+    end)
+end
+
+local function PostWebhook()
+    local url = Options.WebhookLink.Value
+    if url == "" or not url:find("discord.com/api/webhooks/") then return end
+    local selected = Options.WebhookData.Value
+    local rarityFilter = Options.WebhookRarity.Value or {}
+    local data = Plr.Data
+    local lstats = Plr:FindFirstChild("leaderstats")
+    local bounty = lstats and lstats:FindFirstChild("Bounty") and lstats.Bounty.Value or 0
+    local desc = "### Mini Hub\n"
+    if selected["Name"] then desc = desc .. string.format("\n👤 **Player:** ||%s||\n", Plr.Name) end
+    if selected["Stats"] then
+        local gl = data.Level.Value - StartStats.Level
+        local gm = data.Money.Value - StartStats.Money
+        local gg = data.Gems.Value - StartStats.Gems
+        local gb = bounty - StartStats.Bounty
+        desc = desc .. string.format("📈 **Level:** `%s` (+%d)\n", Comma(data.Level.Value), gl)
+        desc = desc .. string.format("💰 **Currency:** 💵 %s (+%s) | 💎 %s (+%s)\n", Short(data.Money.Value), Short(gm), Comma(data.Gems.Value), Comma(gg))
+        desc = desc .. string.format("☠️ **Bounty:** %s (+%s)\n", Short(bounty), Short(gb))
+    end
+    desc = desc .. "\n"
+    local function IsAllowed(itemName)
+        local rarity = Modules.ItemRarity and Modules.ItemRarity.Items[itemName] or "Common"
+        return rarityFilter[rarity] == true
+    end
+    if selected["New Items"] and next(NewItemsBuffer) then
+        local filtered = {}
+        for name, qty in pairs(NewItemsBuffer) do if IsAllowed(name) then filtered[name] = qty end end
+        if next(filtered) then
+            desc = desc .. "✨ **New Items**\n```\n"
+            for name, qty in pairs(filtered) do desc = desc .. string.format("+ [%d] %s\n", qty, name) end
+            desc = desc .. "```\n"
+        end
+    end
+    if selected["All Items"] then
+        local filtered = {}
+        for _, item in pairs(Shared.Cached.Inv or {}) do if IsAllowed(item.name) then table.insert(filtered, item) end end
+        if #filtered > 0 then
+            desc = desc .. "🎒 **Inventory**\n```\n"
+            for _, item in pairs(filtered) do desc = desc .. string.format("- %s: %s\n", item.name, Comma(item.quantity)) end
+            desc = desc .. "```\n"
+        end
+    end
+    local payload = {
+        ["embeds"] = {{
+            ["description"] = desc,
+            ["color"] = tonumber("30ff6a", 16),
+            ["footer"] = {["text"] = string.format("Mini Hub • Session: %s • %s", GetSessionTime(), os.date("%x %X"))}
+        }}
+    }
+    if Toggles.PingOnSend.Value then payload["content"] = (Options.DiscordUID.Value ~= "" and "<@"..Options.DiscordUID.Value..">" or "@everyone") end
+    task.spawn(function()
+        pcall(function()
+            request({Url = url, Method = "POST", Headers = {["Content-Type"] = "application/json"}, Body = HttpService:JSONEncode(payload)})
+            NewItemsBuffer = {}
+        end)
+    end)
+end
+
+local function AddSliderToggle(Config)
+    local Toggle = Config.Group:AddToggle(Config.Id, {Text = Config.Text, Default = Config.DefaultToggle or false})
+    local Slider = Config.Group:AddSlider(Config.Id .. "Value", {Text = Config.Text, Default = Config.Default, Min = Config.Min, Max = Config.Max, Rounding = Config.Rounding or 0, Compact = true, Visible = false})
+    Toggle:OnChanged(function() Slider:SetVisible(Toggle.Value) end)
+    return Toggle, Slider
+end
+
+local function CreateSwitchGroup(tab, id, displayName, tableSource)
+    local toggle = tab:AddToggle("AutoSwitch"..id, {Text = "Auto Switch "..displayName, Default = false})
+    toggle:OnChanged(function(state) if not state then Shared.LastSwitch[id] = "" end end)
+    local listToUse = (id == "Title") and CombinedTitleList or tableSource
+    tab:AddDropdown("Default"..id, {Text = "Default "..displayName, Values = listToUse, Searchable = true})
+    tab:AddDropdown(id.."_Mob", {Text = displayName.." [Mob]", Values = listToUse, Searchable = true})
+    tab:AddDropdown(id.."_Boss", {Text = displayName.." [Boss]", Values = listToUse, Searchable = true})
+    tab:AddDropdown(id.."_Combo", {Text = displayName.." [Combo F]", Values = listToUse, Searchable = true})
+    tab:AddDropdown(id.."_BossHP", {Text = displayName.." [Low HP]", Values = listToUse, Searchable = true})
+    tab:AddSlider(id.."_BossHPAmt", {Text = "Switch Below HP%", Default = 15, Min = 0, Max = 100, Rounding = 0})
+end
+
+local function gsc(guiObject)
+    if not guiObject then return false end
+    local success = false
+    pcall(function()
+        if Services.GuiService and Services.VirtualInputManager then
+            Services.GuiService.SelectedObject = guiObject
+            task.wait(0.05)
+            local keys = {Enum.KeyCode.Return, Enum.KeyCode.KeypadEnter, Enum.KeyCode.ButtonA}
+            for _, key in ipairs(keys) do
+                Services.VirtualInputManager:SendKeyEvent(true, key, false, game) task.wait(0.03)
+                Services.VirtualInputManager:SendKeyEvent(false, key, false, game) task.wait(0.03)
+            end
+            Services.GuiService.SelectedObject = nil
+            success = true
+        end
+    end)
+    return success
+end
+
+local function UpdateAscendUI(data)
+    if data.isMaxed then
+        Lists.AscendLabels[1]:SetText("⭐ Max Ascension!")
+        Lists.AscendLabels[1]:SetVisible(true)
+        for i = 2, 10 do Lists.AscendLabels[i]:SetVisible(false) end
+        return
+    end
+    local reqs = data.requirements or {}
+    for i = 1, 10 do
+        local req = reqs[i]
+        local label = Lists.AscendLabels[i]
+        if req then
+            local displayText = req.display:gsub("<[^>]+>", "")
+            local status = req.completed and " ✅" or " ❌"
+            local progress = string.format(" (%s/%s)", Comma(req.current), Comma(req.needed))
+            label:SetText("- " .. displayText .. progress .. status)
+            label:SetVisible(true)
+        else
+            label:SetVisible(false)
+        end
+    end
+end
+
+local function UpdateGemLabel()
+    if not GemLabel then return end
+    local text = ""
+    local hasData = false
+    for _, statName in ipairs(Lists.GemStat) do
+        local data = Shared.GemStats[statName]
+        if data then hasData = true text = text .. string.format("<b>%s:</b> %s\n", statName, tostring(data.Rank)) end
+    end
+    GemLabel:SetText(hasData and text or "<i>Reroll once to sync.</i>")
+end
+
+local function UpdatePassiveLabel()
+    if not PassiveLabel then return end
+    local text = ""
+    local selectedWeapons = Options.PassiveWeapon.Value or {}
+    local hasAny = false
+    if type(Shared.Passives) ~= "table" then Shared.Passives = {} end
+    for weaponName, isEnabled in pairs(selectedWeapons) do
+        if isEnabled then
+            hasAny = true
+            local data = Shared.Passives[weaponName]
+            local displayName = type(data) == "table" and tostring(data.Name or "None") or (type(data) == "string" and data or "None")
+            text = text .. string.format("<b>%s:</b> %s\n", tostring(weaponName), displayName)
+        end
+    end
+    PassiveLabel:SetText(hasAny and text or "<i>No weapons selected.</i>")
+end
+
+local function IsValidTarget(npc)
+    if not npc or not npc.Parent then return false end
+    local hum = npc:FindFirstChildOfClass("Humanoid")
+    if not hum then return false end
+    if npc:FindFirstChild("IK_Active") then return true end
+    local minMaxHP = tonumber(Options.InstakillMinHP.Value) or 0
+    local isEligible = Toggles.Instakill.Value and hum.MaxHealth >= minMaxHP
+    return isEligible and (hum.Health > 0 or npc == Shared.Target) or (not isEligible and hum.Health > 0)
+end
+
+local function GetBestCluster(mobDict)
+    local allMobs = {}
+    local clusterRadius = 35
+    if type(mobDict) ~= "table" then return nil end
+    for _, npc in pairs(PATH.Mobs:GetChildren()) do
+        if npc:IsA("Model") and npc:FindFirstChildOfClass("Humanoid") then
+            local cleanName = npc.Name:gsub("%d+$", "")
+            if mobDict[cleanName] and IsValidTarget(npc) then table.insert(allMobs, npc) end
+        end
+    end
+    if #allMobs == 0 then return nil end
+    local bestMob, maxNearby = allMobs[1], 0
+    for _, mobA in ipairs(allMobs) do
+        local nearby = 0
+        local posA = mobA:GetPivot().Position
+        for _, mobB in ipairs(allMobs) do
+            if (posA - mobB:GetPivot().Position).Magnitude <= clusterRadius then nearby = nearby + 1 end
+        end
+        if nearby > maxNearby then maxNearby = nearby bestMob = mobA end
+    end
+    return bestMob, maxNearby
+end
+
+local function GetNearestIsland(targetPos, npcName)
+    if npcName and Shared.BossTIMap[npcName] then return Shared.BossTIMap[npcName] end
+    local nearestIslandName, minDistance = "Starter", math.huge
+    for islandName, crystal in pairs(IslandCrystals) do
+        if crystal then
+            local dist = (targetPos - crystal:GetPivot().Position).Magnitude
+            if dist < minDistance then minDistance = dist nearestIslandName = islandName end
+        end
+    end
+    return nearestIslandName
+end
+
+local function RefreshMobLists()
+    local special = {"ThiefBoss", "MonkeyBoss", "DesertBoss", "SnowBoss", "PandaMiniBoss"}
+    local current = {}
+    for _, name in pairs(Lists.MobList) do current[name] = true end
+    for _, v in pairs(PATH.Mobs:GetChildren()) do
+        local cleanName = v.Name:gsub("%d+$", "")
+        local isSpecial = table.find(special, cleanName)
+        if (isSpecial or not cleanName:find("Boss")) and not current[cleanName] then
+            table.insert(Lists.MobList, cleanName)
+            current[cleanName] = true
+            local npcPos = v:GetPivot().Position
+            local closest, minShot = "Unknown", math.huge
+            for islandName, crystal in pairs(IslandCrystals) do
+                if crystal then
+                    local dist = (npcPos - crystal:GetPivot().Position).Magnitude
+                    if dist < minShot then minShot = dist closest = islandName end
+                end
+            end
+            Lists.MobToIsland[cleanName] = closest
+        end
+    end
+    Options.PickMob:SetValues(Lists.MobList)
+end
+
+local function RefreshEntityList()
+    table.clear(Lists.AllEntitiesList)
+    local unique = {}
+    for _, v in pairs(PATH.Mobs:GetChildren()) do
+        local cleanName = v.Name:gsub("%d+$", "")
+        if not unique[cleanName] then unique[cleanName] = true table.insert(Lists.AllEntitiesList, cleanName) end
+    end
+    table.sort(Lists.AllEntitiesList)
+    if Options.QuestDMGTarget then Options.QuestDMGTarget:SetValues(Lists.AllEntitiesList) end
+end
+
+local function PopulateNPCLists()
+    for _, child in ipairs(workspace:GetChildren()) do
+        if child.Name:match("^QuestNPC%d+$") and not table.find(Lists.NPC_QuestList, child.Name) then
+            table.insert(Lists.NPC_QuestList, child.Name)
+        end
+    end
+    for _, child in ipairs(PATH.InteractNPCs:GetChildren()) do
+        if child.Name:match("^QuestNPC%d+$") and not table.find(Lists.NPC_QuestList, child.Name) then
+            table.insert(Lists.NPC_QuestList, child.Name)
+        end
+    end
+    table.sort(Lists.NPC_QuestList, function(a, b)
+        local numA = tonumber(a:match("%d+$")) or 0
+        local numB = tonumber(b:match("%d+$")) or 0
+        return (numA == numB) and (a < b) or (numA < numB)
+    end)
+    for _, v in pairs(PATH.InteractNPCs:GetChildren()) do
+        local name = v.Name
+        if (name:find("Moveset") or name:find("Buyer")) and not name:find("Observation") then table.insert(Lists.NPC_MovesetList, name) end
+        if (name:find("Mastery") or name:find("Questline") or name:find("Craft")) and not (name:find("Grail") or name:find("Slime")) then table.insert(Lists.NPC_MasteryList, name) end
+    end
+    table.sort(Lists.NPC_MovesetList)
+    table.sort(Lists.NPC_MasteryList)
+end
+
+local function GetCurrentPity()
+    local pityLabel = PGui.BossUI.MainFrame.BossHPBar.Pity
+    local current, max = pityLabel.Text:match("Pity: (%d+)/(%d+)")
+    return tonumber(current) or 0, tonumber(max) or 25
+end
+
+PopulateNPCLists()
+
+local function SmartMatch(npcName, targetMobType)
+    local n = npcName:gsub("%d+$", ""):lower()
+    local t = targetMobType:lower()
+    return n == t or t:find(n) == 1 or n:find(t) == 1
+end
+
+local function SafeTP(targetName, customMap)
+    local char = GetCharacter()
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local actualName = customMap and customMap[targetName] or targetName
+    local target = workspace:FindFirstChild(actualName) or PATH.InteractNPCs:FindFirstChild(actualName)
+    if not target then
+        for _, v in pairs(PATH.InteractNPCs:GetChildren()) do
+            if v.Name:find(actualName) then target = v break end
+        end
+    end
+    if target then
+        root.CFrame = target:GetPivot() * CFrame.new(0, 3, 0)
+        root.AssemblyLinearVelocity = Vector3.new(0, 0.01, 0)
+        root.AssemblyAngularVelocity = Vector3.zero
+    else
+        Library:Notify("NPC not found: " .. tostring(actualName), 3)
+    end
+end
+
+local function Clean(str) return str:gsub("%s+", ""):lower() end
+
+local function GetWeaponType(toolName)
+    local cleanedTarget = Clean(toolName)
+    for manualName, toolType in pairs(Lists.ManualWeaponClass) do
+        if Clean(manualName) == cleanedTarget then return toolType end
+    end
+    if Modules.WeaponClass and Modules.WeaponClass.Tools then
+        for moduleName, toolType in pairs(Modules.WeaponClass.Tools) do
+            if Clean(moduleName) == cleanedTarget then return toolType end
+        end
+    end
+    if toolName:lower():find("fruit") then return "Power" end
+    return "Melee"
+end
+
+local function GetWeaponsByType()
+    local available = {}
+    local enabledTypes = Options.WeaponTypeFilter.Value or {}
+    local char = GetCharacter()
+    local containers = {Plr.Backpack}
+    if char then table.insert(containers, char) end
+    for _, container in ipairs(containers) do
+        for _, tool in ipairs(container:GetChildren()) do
+            if tool:IsA("Tool") then
+                local toolType = GetWeaponType(tool.Name)
+                if enabledTypes[toolType] and not table.find(available, tool.Name) then
+                    table.insert(available, tool.Name)
+                end
+            end
+        end
+    end
+    return available
+end
+
+local function UpdateWeaponRotation()
+    local weaponList = GetWeaponsByType()
+    if #weaponList == 0 then Shared.ActiveWeap = "" return end
+    local switchDelay = Options.WeaponSwitchCD.Value or 4
+    if tick() - Shared.LastWRSwitch >= switchDelay then
+        Shared.WeapRotationIdx = Shared.WeapRotationIdx + 1
+        if Shared.WeapRotationIdx > #weaponList then Shared.WeapRotationIdx = 1 end
+        Shared.ActiveWeap = weaponList[Shared.WeapRotationIdx]
+        Shared.LastWRSwitch = tick()
+    end
+    local exists = false
+    for _, name in ipairs(weaponList) do if name == Shared.ActiveWeap then exists = true break end end
+    if not exists then Shared.ActiveWeap = weaponList[1] end
+end
+
+local function EquipWeapon()
+    UpdateWeaponRotation()
+    if Shared.ActiveWeap == "" then return end
+    local char = GetCharacter()
+    local hum = char and char:FindFirstChildOfClass("Humanoid")
+    if not hum then return end
+    if char:FindFirstChild(Shared.ActiveWeap) then return end
+    local tool = Plr.Backpack:FindFirstChild(Shared.ActiveWeap) or char:FindFirstChild(Shared.ActiveWeap)
+    if tool then hum:EquipTool(tool) end
+end
+
+local function CheckObsHaki()
+    local DodgeUI = PGui:FindFirstChild("DodgeCounterUI")
+    return DodgeUI and DodgeUI:FindFirstChild("MainFrame") and DodgeUI.MainFrame.Visible
+end
+
+local function CheckArmHaki()
+    if Shared.ArmHaki == true then return true end
+    local char = GetCharacter()
+    if char then
+        local leftArm = char:FindFirstChild("Left Arm") or char:FindFirstChild("LeftUpperArm")
+        local rightArm = char:FindFirstChild("Right Arm") or char:FindFirstChild("RightUpperArm")
+        local hasVisual = (leftArm and leftArm:FindFirstChild("Lightning Strike")) or (rightArm and rightArm:FindFirstChild("Lightning Strike"))
+        if hasVisual then Shared.ArmHaki = true return true end
+    end
+    return false
+end
+
+local function IsBusy()
+    return Plr.Character and Plr.Character:FindFirstChildOfClass("ForceField") ~= nil
+end
+
+local function IsSkillReady(key)
+    local char = GetCharacter()
+    local tool = char and char:FindFirstChildOfClass("Tool")
+    if not tool then return true end
+    local mainFrame = PGui:FindFirstChild("CooldownUI") and PGui.CooldownUI:FindFirstChild("MainFrame")
+    if not mainFrame then return true end
+    local cleanTool = Clean(tool.Name)
+    local foundFrame = nil
+    for _, frame in pairs(mainFrame:GetChildren()) do
+        if not frame:IsA("Frame") then continue end
+        local fname = frame.Name:lower()
+        if fname:find("cooldown") and (fname:find(cleanTool) or fname:find("skill")) then
+            local mapped = "none"
+            if fname:find("skill 1") or fname:find("_z") then mapped = "Z"
+            elseif fname:find("skill 2") or fname:find("_x") then mapped = "X"
+            elseif fname:find("skill 3") or fname:find("_c") then mapped = "C"
+            elseif fname:find("skill 4") or fname:find("_v") then mapped = "V"
+            elseif fname:find("skill 5") or fname:find("_f") then mapped = "F" end
+            if mapped == key then foundFrame = frame break end
+        end
+    end
+    if not foundFrame then return true end
+    local cdLabel = foundFrame:FindFirstChild("WeaponNameAndCooldown", true)
+    return cdLabel and cdLabel.Text:find("Ready")
+end
+
+local function GetSecondsFromTimer(text)
+    local min, sec = text:match("(%d+):(%d+)")
+    if min and sec then return (tonumber(min) * 60) + tonumber(sec) end
+    return nil
+end
+
+local function FormatTimer(s)
+    local minutes = math.floor(s / 60)
+    local seconds = s % 60
+    return string.format("<b>Shop Refresh:</b> %02d:%02d", minutes, seconds)
+end
+
+local function OpenShopInterface()
+    if isXeno then
+        local npc = workspace:FindFirstChild("ServiceNPCs") and workspace.ServiceNPCs:FindFirstChild("MerchantNPC")
+        local prompt = npc and npc:FindFirstChild("HumanoidRootPart") and npc.HumanoidRootPart:FindFirstChild("MerchantPrompt")
+        if prompt then
+            local char = GetCharacter()
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if root then
+                local oldCF = root.CFrame
+                root.CFrame = npc.HumanoidRootPart.CFrame * CFrame.new(0, 0, 3)
+                task.wait(0.2)
+                if Support.Proximity then fireproximityprompt(prompt)
+                else prompt:InputHoldBegin() task.wait(prompt.HoldDuration + 0.1) prompt:InputHoldEnd() end
+                task.wait(0.5)
+                root.CFrame = oldCF
+            end
+        end
+    else
+        if firesignal then firesignal(Remotes.OpenMerchant.OnClientEvent)
+        elseif getconnections then
+            for _, v in pairs(getconnections(Remotes.OpenMerchant.OnClientEvent)) do
+                if v.Function then task.spawn(v.Function) end
+            end
+        end
+    end
+end
+
+local function SyncRaceSettings()
+    if not Toggles.AutoRace.Value then return end
+    pcall(function()
+        local selected = Options.PickRace.Value or {}
+        local hasEpic, hasLegendary = false, false
+        for name, data in pairs(Modules.Race.Races) do
+            local rarity = data.rarity or data.Rarity
+            if rarity == "Mythical" then
+                local shouldSkip = not selected[name]
+                if Shared.Settings["SkipRace_" .. name] ~= shouldSkip then
+                    Remotes.SettingsToggle:FireServer("SkipRace_" .. name, shouldSkip)
+                end
+            end
+            if selected[name] then
+                if rarity == "Epic" then hasEpic = true end
+                if rarity == "Legendary" then hasLegendary = true end
+            end
+        end
+        if Shared.Settings["SkipEpicReroll"] ~= not hasEpic then Remotes.SettingsToggle:FireServer("SkipEpicReroll", not hasEpic) end
+        if Shared.Settings["SkipLegendaryReroll"] ~= not hasLegendary then Remotes.SettingsToggle:FireServer("SkipLegendaryReroll", not hasLegendary) end
+    end)
+end
+
+local function SyncClanSettings()
+    if not Toggles.AutoClan.Value then return end
+    pcall(function()
+        local selected = Options.PickClan.Value or {}
+        local hasEpic, hasLegendary = false, false
+        for name, data in pairs(Modules.Clan.Clans) do
+            local rarity = data.rarity or data.Rarity
+            if rarity == "Legendary" then
+                local shouldSkip = not selected[name]
+                if Shared.Settings["SkipClan_" .. name] ~= shouldSkip then
+                    Remotes.SettingsToggle:FireServer("SkipClan_" .. name, shouldSkip)
+                end
+            end
+            if selected[name] then
+                if rarity == "Epic" then hasEpic = true end
+                if rarity == "Legendary" then hasLegendary = true end
+            end
+        end
+        if Shared.Settings["SkipEpicClan"] ~= not hasEpic then Remotes.SettingsToggle:FireServer("SkipEpicClan", not hasEpic) end
+        if Shared.Settings["SkipLegendaryClan"] ~= not hasLegendary then Remotes.SettingsToggle:FireServer("SkipLegendaryClan", not hasLegendary) end
+    end)
+end
+
+local function SyncTraitAutoSkip()
+    if not Toggles.AutoTrait.Value then return end
+    pcall(function()
+        local selected = Options.PickTrait.Value or {}
+        local rarityHierarchy = {["Epic"]=1,["Legendary"]=2,["Mythical"]=3,["Secret"]=4}
+        local lowestTargetValue = 99
+        for traitName, enabled in pairs(selected) do
+            if enabled then
+                local data = Modules.Trait.Traits[traitName]
+                if data then
+                    local val = rarityHierarchy[data.Rarity] or 0
+                    if val > 0 and val < lowestTargetValue then lowestTargetValue = val end
+                end
+            end
+        end
+        if lowestTargetValue == 99 then return end
+        Remotes.TraitAutoSkip:FireServer({
+            ["Epic"] = 1 < lowestTargetValue,
+            ["Legendary"] = 2 < lowestTargetValue,
+            ["Mythical"] = 3 < lowestTargetValue,
+            ["Secret"] = 4 < lowestTargetValue
+        })
+    end)
+end
+
+local function EvalArtifact(uuid, data)
+    local actions = {lock = false, delete = false, upgrade = false}
+    local function GetFilterStatus(filter, value)
+        if not filter or next(filter) == nil then return nil end
+        return filter[value] == true
+    end
+    local function IsWhitelisted(filter, value)
+        local status = GetFilterStatus(filter, value)
+        if status == nil then return true end
+        return status
+    end
+    local function CountMatches(d, ssFilter)
+        local count = 0
+        for _, sub in pairs(d.Substats or {}) do if ssFilter[sub.Stat] then count = count + 1 end end
+        return count
+    end
+    if Toggles.ArtifactUpgrade.Value and data.Level < Options.UpgradeCap.Value then
+        if IsWhitelisted(Options.UpgradeMS.Value, data.MainStat.Stat) then actions.upgrade = true end
+    end
+    local lockMinSS = Options.LockMinSS.Value
+    if Toggles.ArtifactLock.Value and not data.Locked and data.Level >= (lockMinSS * 3) then
+        if IsWhitelisted(Options.LockMS.Value, data.MainStat.Stat) and IsWhitelisted(Options.LockType.Value, data.Category) and IsWhitelisted(Options.LockSet.Value, data.Set) then
+            if CountMatches(data, Options.LockSS.Value) >= lockMinSS then actions.lock = true end
+        end
+    end
+    if not data.Locked and not actions.lock then
+        if Toggles.DeleteUnlocked.Value then
+            actions.delete = true
+        elseif Toggles.ArtifactDelete.Value then
+            local typeMatch = GetFilterStatus(Options.DelType.Value, data.Category)
+            local setMatch = GetFilterStatus(Options.DelSet.Value, data.Set)
+            local msDropdown = "DelMS_" .. data.Category
+            local specificMS = Options[msDropdown] and Options[msDropdown].Value or {}
+            local msMatch = GetFilterStatus(specificMS, data.MainStat.Stat)
+            local isTarget = true
+            if typeMatch == false then isTarget = false end
+            if setMatch == false then isTarget = false end
+            if typeMatch == nil and setMatch == nil and msMatch == nil then isTarget = false end
+            if isTarget then
+                local trashCount = CountMatches(data, Options.DelSS.Value)
+                local minTrash = Options.DelMinSS.Value
+                local isMaxLevel = data.Level >= Options.UpgradeCap.Value
+                if msMatch == true then actions.delete = true
+                elseif minTrash == 0 then actions.delete = true
+                elseif isMaxLevel and trashCount >= minTrash then actions.delete = true end
+            end
+        end
+    end
+    return actions
+end
+
+local function AutoEquipBest()
+    if not Toggles.ArtifactEquip.Value then return end
+    local bestItems = {Helmet=nil,Gloves=nil,Body=nil,Boots=nil}
+    local bestScores = {Helmet=-1,Gloves=-1,Body=-1,Boots=-1}
+    local targetTypes = Options.EquipType.Value or {}
+    local targetMS = Options.EquipMS.Value or {}
+    local targetSS = Options.EquipSS.Value or {}
+    local function mainStatGood(data)
+        if data.Category == "Helmet" or data.Category == "Gloves" then return true end
+        return targetMS[data.MainStat.Stat] == true
+    end
+    local function countMatches(data)
+        local count = 0
+        for _, sub in pairs(data.Substats or {}) do if targetSS[sub.Stat] then count = count + 1 end end
+        return count
+    end
+    for uuid, data in pairs(Shared.ArtifactSession.Inventory) do
+        if targetTypes[data.Category] and mainStatGood(data) then
+            local score = (countMatches(data) * 10) + data.Level
+            if score > bestScores[data.Category] then bestScores[data.Category] = score bestItems[data.Category] = {UUID=uuid,Equipped=data.Equipped} end
+        end
+    end
+    for _, item in pairs(bestItems) do
+        if item and not item.Equipped then Remotes.ArtifactEquip:FireServer(item.UUID) task.wait(0.2) end
+    end
+end
+
+local function StrictBossMatch(npcName, targetDisplayName)
+    local n = npcName:lower():gsub("%s+", "")
+    local t = targetDisplayName:lower():gsub("%s+", "")
+    if n:find("true") and not t:find("true") then return false end
+    if t:find("strongest") then
+        local era = t:find("history") and "history" or "today"
+        return n:find("strongest") and n:find(era)
+    end
+    return n:find(t)
+end
+
+local function UpgradeLoop(mode)
+    local toggle = Toggles["Auto"..mode]
+    local allToggle = Toggles["Auto"..mode.."All"]
+    local remote = (mode == "Enchant") and Remotes.Enchant or Remotes.Blessing
+    local sourceTable = (mode == "Enchant") and Lists.OwnedAccessory or Lists.OwnedWeapon
+    while toggle.Value or allToggle.Value do
+        local selection = Options["Pick"..mode].Value or {}
+        local workDone = false
+        for _, itemName in ipairs(sourceTable) do
+            if Shared.UpBlacklist[itemName] then continue end
+            local isSelected = allToggle.Value or selection[itemName] or table.find(selection, itemName)
+            if isSelected then
+                workDone = true
+                pcall(function() remote:FireServer(itemName) end)
+                task.wait(1.5)
+                break
+            end
+        end
+        if not workDone then
+            toggle:SetValue(false)
+            allToggle:SetValue(false)
+            break
+        end
+        task.wait(0.1)
+    end
+end
+
+local function FireBossRemote(bossName, diff)
+    local lowerName = bossName:lower():gsub("%s+", "")
+    local remoteArg = GetRemoteBossArg(bossName)
+    table.clear(Shared.AltDamage)
+    local function GetSummonId(name)
+        local cleanTarget = name:lower():gsub("%s+", "")
+        for displayName, internalId in pairs(SummonMap) do
+            if displayName:lower():gsub("%s+", "") == cleanTarget then return internalId end
+        end
+        return name:gsub("%s+", "") .. "Boss"
+    end
+    pcall(function()
+        if lowerName:find("rimuru") then Remotes.RimuruBoss:FireServer(diff)
+        elseif lowerName:find("anos") then Remotes.AnosBoss:FireServer("Anos", diff)
+        elseif lowerName:find("trueaizen") then if Remotes.TrueAizenBoss then Remotes.TrueAizenBoss:FireServer(diff) end
+        elseif lowerName:find("strongest") then Remotes.JJKSummonBoss:FireServer(remoteArg, diff)
+        elseif lowerName:find("atomic") then Remotes.AtomicBoss:FireServer(diff)
+        else Remotes.SummonBoss:FireServer(GetSummonId(bossName), diff) end
+    end)
+end
+
+local function HandleSummons()
+    if Shared.MerchantBusy then return end
+    local function MatchName(n1, n2)
+        if not n1 or not n2 then return false end
+        return n1:lower():gsub("%s+", "") == n2:lower():gsub("%s+", "")
+    end
+    local function IsSummonable(name)
+        local cleanName = name:lower():gsub("%s+", "")
+        for _, boss in ipairs(Lists.SummonList) do if MatchName(boss, cleanName) then return true end end
+        for _, boss in ipairs(Lists.OtherSummonList) do if MatchName(boss, cleanName) then return true end end
+        return false
+    end
+    if Toggles.PityFarm.Value then
+        local current, max = GetCurrentPity()
+        local buildOptions = Options.PityBuildBoss.Value or {}
+        local useName = Options.PityUseBoss.Value
+        if useName and next(buildOptions) then
+            local isUseTurn = (current >= (max - 1))
+            if isUseTurn then
+                local found = false
+                for _, v in pairs(PATH.Mobs:GetChildren()) do
+                    if MatchName(v.Name, useName) or v.Name:lower():find(useName:lower():gsub("%s+", "")) then found = true break end
+                end
+                if not found and IsSummonable(useName) then FireBossRemote(useName, Options.PityDiff.Value or "Normal") task.wait(0.5) return end
+            else
+                local anySpawned = false
+                for bossName, enabled in pairs(buildOptions) do
+                    if enabled then
+                        for _, v in pairs(PATH.Mobs:GetChildren()) do
+                            if MatchName(v.Name, bossName) or v.Name:lower():find(bossName:lower():gsub("%s+", "")) then anySpawned = true break end
+                        end
+                    end
+                    if anySpawned then break end
+                end
+                if not anySpawned then
+                    for bossName, enabled in pairs(buildOptions) do
+                        if enabled and IsSummonable(bossName) then FireBossRemote(bossName, "Normal") task.wait(0.5) return end
+                    end
+                end
+            end
+        end
+    end
+    if Toggles.AutoOtherSummon.Value then
+        local selected = Options.OtherSummonPick.Value
+        local diff = Options.OtherSummonDiff.Value
+        if selected and diff then
+            local keyword = selected:gsub("Strongest", ""):lower()
+            local found = false
+            for _, v in pairs(PATH.Mobs:GetChildren()) do
+                local npcName = v.Name:lower()
+                if npcName:find(selected:lower()) or (npcName:find("strongest") and npcName:find(keyword)) then found = true break end
+            end
+            if not found then FireBossRemote(selected, diff) task.wait(0.5) end
+        end
+    end
+    if Toggles.AutoSummon.Value then
+        local selected = Options.PickSummon.Value
+        if selected then
+            local found = false
+            for _, v in pairs(PATH.Mobs:GetChildren()) do if StrictBossMatch(v.Name, selected) then found = true break end end
+            if not found then FireBossRemote(selected, Options.SummonDiff.Value or "Normal") task.wait(0.5) end
+        end
+    end
+end
+
+local function UpdateSwitchState(target, farmType)
+    if Shared.GlobalPrio == "COMBO" then return end
+    local types = {
+        {id="Title", remote=Remotes.EquipTitle, method=function(val) return val end},
+        {id="Rune", remote=Remotes.EquipRune, method=function(val) return {"Equip", val} end},
+        {id="Build", remote=Remotes.LoadoutLoad, method=function(val) return tonumber(val) end}
+    }
+    for _, switch in ipairs(types) do
+        local toggleObj = Toggles["AutoSwitch"..switch.id]
+        if not (toggleObj and toggleObj.Value) then continue end
+        if switch.id == "Build" and tick() - Shared.LastBuildSwitch < 3.1 then continue end
+        local toEquip = ""
+        local threshold = Options[switch.id.."_BossHPAmt"].Value
+        local isLow = false
+        if farmType == "Boss" and target then
+            local hum = target:FindFirstChildOfClass("Humanoid")
+            if hum and (hum.Health / hum.MaxHealth) * 100 <= threshold then isLow = true end
+        end
+        if farmType == "None" then toEquip = Options["Default"..switch.id].Value
+        elseif farmType == "Mob" then toEquip = Options[switch.id.."_Mob"].Value
+        elseif farmType == "Boss" then toEquip = isLow and Options[switch.id.."_BossHP"].Value or Options[switch.id.."_Boss"].Value end
+        if not toEquip or toEquip == "" or toEquip == "None" then continue end
+        local finalEquip = toEquip
+        if switch.id == "Title" and toEquip:find("Best ") then
+            local bestId = GetBestTitle(toEquip)
+            if bestId then finalEquip = bestId else continue end
+        end
+        if finalEquip ~= Shared.LastSwitch[switch.id] then
+            local args = switch.method(finalEquip)
+            pcall(function()
+                if type(args) == "table" then switch.remote:FireServer(unpack(args))
+                else switch.remote:FireServer(args) end
+            end)
+            Shared.LastSwitch[switch.id] = finalEquip
+            if switch.id == "Build" then Shared.LastBuildSwitch = tick() end
+        end
+    end
+end
+
+local function HybridMove(targetCF)
+    local character = GetCharacter()
+    local root = character and character:FindFirstChild("HumanoidRootPart")
+    if not root then return end
+    local distance = (root.Position - targetCF.Position).Magnitude
+    local tweenSpeed = Options.FarmTweenSpeed.Value or 180
+    if distance > tonumber(Options.FarmDistTP.Value) then
+        local oldNoclip = Toggles.Noclip.Value
+        Toggles.Noclip:SetValue(true)
+        local tweenTarget = targetCF * CFrame.new(0, 0, 150)
+        local tweenDist = (root.Position - tweenTarget.Position).Magnitude
+        local duration = tweenDist / tweenSpeed
+        local tween = game:GetService("TweenService"):Create(root, TweenInfo.new(duration, Enum.EasingStyle.Linear), {CFrame = tweenTarget})
+        tween:Play()
+        tween.Completed:Wait()
+        Toggles.Noclip:SetValue(oldNoclip)
+        task.wait(0.1)
+    end
+    root.CFrame = targetCF
+    root.AssemblyLinearVelocity = Vector3.new(0, 0.01, 0)
+    task.wait(0.2)
+end
+
+local function SolvePuzzle(puzzleType)
+    local moduleMap = {
+        ["Dungeon"] = RS.Modules:FindFirstChild("DungeonConfig"),
+        ["Slime"] = RS.Modules:FindFirstChild("SlimePuzzleConfig"),
+        ["Demonite"] = RS.Modules:FindFirstChild("DemoniteCoreQuestConfig"),
+        ["Hogyoku"] = RS.Modules:FindFirstChild("HogyokuQuestConfig")
+    }
+    local hogyokuIslands = {"Snow", "Shibuya", "HuecoMundo", "Shinjuku", "Slime", "Judgement"}
+    local targetModule = moduleMap[puzzleType]
+    if not targetModule then return end
+    local data = require(targetModule)
+    local settings = data.PuzzleSettings or data.PieceSettings
+    local piecesToCollect = data.Pieces or settings.IslandOrder
+    local pieceModelName = settings and settings.PieceModelName or "DungeonPuzzlePiece"
+    Library:Notify("Starting " .. puzzleType .. " Puzzle...", 5)
+    for i, islandOrPiece in ipairs(piecesToCollect) do
+        local piece, tpTarget = nil, nil
+        if puzzleType == "Demonite" then tpTarget = "Academy"
+        elseif puzzleType == "Hogyoku" then tpTarget = hogyokuIslands[i]
+        else
+            tpTarget = islandOrPiece:gsub("Island", ""):gsub("Station", "")
+            if islandOrPiece == "HuecoMundo" then tpTarget = "HuecoMundo" end
+        end
+        if tpTarget then Remotes.TP_Portal:FireServer(tpTarget) task.wait(2.5) end
+        if puzzleType == "Demonite" or puzzleType == "Hogyoku" then
+            piece = workspace:FindFirstChild(islandOrPiece, true)
+        else
+            local islandFolder = workspace:FindFirstChild(islandOrPiece)
+            piece = islandFolder and islandFolder:FindFirstChild(pieceModelName, true) or workspace:FindFirstChild(pieceModelName, true)
+        end
+        if piece then
+            HybridMove(piece:GetPivot() * CFrame.new(0, 3, 0))
+            task.wait(0.5)
+            local prompt = piece:FindFirstChildOfClass("ProximityPrompt") or piece:FindFirstChild("ProximityPrompt", true)
+            if prompt then
+                fireproximityprompt(prompt)
+                Library:Notify(string.format("Piece %d/%d collected", i, #piecesToCollect), 2)
+                task.wait(1.5)
+            end
+        else
+            Library:Notify("Could not find piece " .. i, 3)
+        end
+    end
+    Library:Notify(puzzleType .. " Puzzle done!", 5)
+end
+
+local function EnsureQuestSettings()
+    local settings = PGui.SettingsUI.MainFrame.Frame.Content.SettingsTabFrame
+    local tog1 = settings:FindFirstChild("Toggle_EnableQuestRepeat", true)
+    if tog1 and tog1.SettingsHolder.Off.Visible then Remotes.SettingsToggle:FireServer("EnableQuestRepeat", true) task.wait(0.3) end
+    local tog2 = settings:FindFirstChild("Toggle_AutoQuestRepeat", true)
+    if tog2 and tog2.SettingsHolder.Off.Visible then Remotes.SettingsToggle:FireServer("AutoQuestRepeat", true) end
+end
+
+local function GetBestQuestNPC()
+    local QuestModule = Modules.Quests
+    local playerLevel = Plr.Data.Level.Value
+    local bestNPC, highestLevel = "QuestNPC1", -1
+    for npcId, questData in pairs(QuestModule.RepeatableQuests) do
+        local reqLevel = questData.recommendedLevel or 0
+        if playerLevel >= reqLevel and reqLevel > highestLevel then highestLevel = reqLevel bestNPC = npcId end
+    end
+    return bestNPC
+end
+
+local function UpdateQuest()
+    if not Toggles.LevelFarm.Value then return end
+    EnsureQuestSettings()
+    local targetNPC = GetBestQuestNPC()
+    local questUI = PGui.QuestUI.Quest
+    if Shared.QuestNPC ~= targetNPC or not questUI.Visible then
+        Remotes.QuestAbandon:FireServer("repeatable")
+        local t = 0
+        while questUI.Visible and t < 15 do task.wait(0.2) t = t + 1 end
+        Remotes.QuestAccept:FireServer(targetNPC)
+        t = 0
+        while not questUI.Visible and t < 20 do
+            task.wait(0.2) t = t + 1
+            if t % 5 == 0 then Remotes.QuestAccept:FireServer(targetNPC) end
+        end
+        if questUI.Visible then Shared.QuestNPC = targetNPC end
+    end
+end
+
+-- Farm target getters
+local function GetPityTarget()
+    if not Toggles.PityFarm.Value then return nil end
+    local current, max = GetCurrentPity()
+    local useName = Options.PityUseBoss.Value
+    if not useName then return nil end
+    local isUseTurn = (current >= (max - 1))
+    if isUseTurn then
+        for _, npc in pairs(PATH.Mobs:GetChildren()) do
+            if StrictBossMatch(npc.Name, useName) and IsValidTarget(npc) then
+                return npc, Shared.BossTIMap[useName] or "Boss", "Boss"
+            end
+        end
+    else
+        for bossName, enabled in pairs(Options.PityBuildBoss.Value or {}) do
+            if enabled then
+                for _, npc in pairs(PATH.Mobs:GetChildren()) do
+                    if StrictBossMatch(npc.Name, bossName) and IsValidTarget(npc) then
+                        return npc, Shared.BossTIMap[bossName] or "Boss", "Boss"
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function GetAllMobTarget()
+    if not Toggles.AllMobFarm.Value then Shared.AllMobIdx = 1 return nil end
+    local rotateList = {}
+    for _, mobName in ipairs(Lists.MobList) do
+        if mobName ~= "TrainingDummy" then table.insert(rotateList, mobName) end
+    end
+    if #rotateList == 0 then return nil end
+    if Shared.AllMobIdx > #rotateList then Shared.AllMobIdx = 1 end
+    local targetMobName = rotateList[Shared.AllMobIdx]
+    local target = GetBestCluster({[targetMobName] = true})
+    if target then
+        return target, GetNearestIsland(target:GetPivot().Position, target.Name), "Mob"
+    else
+        Shared.AllMobIdx = Shared.AllMobIdx + 1
+        if Shared.AllMobIdx > #rotateList then Shared.AllMobIdx = 1 end
+        return nil
+    end
+end
+
+local function GetLevelFarmTarget()
+    if not Toggles.LevelFarm.Value then return nil end
+    UpdateQuest()
+    if not PGui.QuestUI.Quest.Visible then return nil end
+    local questData = Modules.Quests.RepeatableQuests[Shared.QuestNPC]
+    if not questData or not questData.requirements[1] then return nil end
+    local targetMobType = questData.requirements[1].npcType
+    local matches = {}
+    for _, npc in pairs(PATH.Mobs:GetChildren()) do
+        if npc:IsA("Model") and npc:FindFirstChildOfClass("Humanoid") then
+            if SmartMatch(npc.Name, targetMobType) then matches[npc.Name:gsub("%d+$", "")] = true end
+        end
+    end
+    local bestMob = GetBestCluster(matches)
+    if bestMob then return bestMob, GetNearestIsland(bestMob:GetPivot().Position, bestMob.Name), "Mob" end
+    return nil
+end
+
+local function GetOtherSummonTarget()
+    if not Toggles.OtherSummonFarm.Value then return nil end
+    local selected = Options.OtherSummonPick.Value
+    if not selected then return nil end
+    local lowerSelected = selected:lower()
+    for _, npc in pairs(PATH.Mobs:GetChildren()) do
+        local name = npc.Name:lower()
+        local isMatch = false
+        if lowerSelected:find("strongest") then
+            if name:find("strongest") and ((lowerSelected:find("history") and name:find("history")) or (lowerSelected:find("today") and name:find("today"))) then isMatch = true end
+        elseif name:find(lowerSelected) then isMatch = true end
+        if isMatch and IsValidTarget(npc) then return npc, GetNearestIsland(npc:GetPivot().Position, npc.Name), "Boss" end
+    end
+    return nil
+end
+
+local function GetSummonTarget()
+    if not Toggles.SummonFarm.Value then return nil end
+    local selected = Options.PickSummon.Value
+    if not selected then return nil end
+    local workspaceName = SummonMap[selected] or (selected .. "Boss")
+    for _, npc in pairs(PATH.Mobs:GetChildren()) do
+        if npc.Name:lower():find(workspaceName:lower()) and IsValidTarget(npc) then
+            return npc, "Boss", "Boss"
+        end
+    end
+    return nil
+end
+
+local function GetWorldBossTarget()
+    if Toggles.AllBossFarm.Value then
+        for _, npc in pairs(PATH.Mobs:GetChildren()) do
+            if npc.Name:find("Boss") and not table.find(Lists.MiniBossList, npc.Name) and IsValidTarget(npc) then
+                local island = "Boss"
+                for dName, iName in pairs(Shared.BossTIMap) do if StrictBossMatch(npc.Name, dName) then island = iName break end end
+                return npc, island, "Boss"
+            end
+        end
+    end
+    if Toggles.BossFarm.Value then
+        local selected = Options.PickBoss.Value or {}
+        for bossDisplayName, isEnabled in pairs(selected) do
+            if isEnabled then
+                for _, npc in pairs(PATH.Mobs:GetChildren()) do
+                    if StrictBossMatch(npc.Name, bossDisplayName) and not table.find(Lists.MiniBossList, npc.Name) and IsValidTarget(npc) then
+                        return npc, Shared.BossTIMap[bossDisplayName] or "Boss", "Boss"
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+local function GetMobTarget()
+    if not Toggles.MobFarm.Value then Shared.MobIdx = 1 return nil end
+    local selectedDict = Options.PickMob.Value or {}
+    local enabledMobs = {}
+    for mob, enabled in pairs(selectedDict) do if enabled then table.insert(enabledMobs, mob) end end
+    table.sort(enabledMobs)
+    if #enabledMobs == 0 then return nil end
+    if Shared.MobIdx > #enabledMobs then Shared.MobIdx = 1 end
+    local targetMobName = enabledMobs[Shared.MobIdx]
+    local target = GetBestCluster({[targetMobName] = true})
+    if target then return target, GetNearestIsland(target:GetPivot().Position, target.Name), "Mob"
+    else Shared.MobIdx = Shared.MobIdx + 1 return nil end
+end
+
+local function ShouldWaitForAlt()
+    if not Toggles.AltHelp.Value then return false end
+    local selectedAlts = {}
+    for i = 1, 5 do
+        local val = Options["AltPlayer_" .. i].Value
+        local name = (typeof(val) == "Instance" and val:IsA("Player")) and val.Name or tostring(val)
+        if name and name ~= "" and name ~= "nil" and name ~= "None" then table.insert(selectedAlts, name) end
+    end
+    if #selectedAlts == 0 then return false end
+    for _, altName in ipairs(selectedAlts) do
+        if (Shared.AltDamage[altName] or 0) < 10 then return true end
+    end
+    return false
+end
+
+local function GetAltTarget()
+    if not Toggles.AltHelp.Value then return nil end
+    local targetBossName = Options.AltBossPick.Value
+    if not targetBossName then return nil end
+    local targetNPC = nil
+    for _, npc in pairs(PATH.Mobs:GetChildren()) do
+        if StrictBossMatch(npc.Name, targetBossName) and IsValidTarget(npc) then targetNPC = npc break end
+    end
+    if not targetNPC then FireBossRemote(targetBossName, Options.AltDiff.Value or "Normal") task.wait(0.5) return nil end
+    Shared.AltActive = ShouldWaitForAlt()
+    return targetNPC, Shared.BossTIMap[targetBossName] or "Boss", "Boss"
+end
+
+local function CheckTask(taskType)
+    if taskType == "Merchant" then
+        if Toggles.AutoShop.Value and Shared.MerchantBusy then return true, nil, "None" end
+        return nil
+    elseif taskType == "Pity Boss" then return GetPityTarget()
+    elseif taskType == "Summon [Other]" then return GetOtherSummonTarget()
+    elseif taskType == "Summon" then return GetSummonTarget()
+    elseif taskType == "Boss" then return GetWorldBossTarget()
+    elseif taskType == "Level Farm" then return GetLevelFarmTarget()
+    elseif taskType == "All Mob Farm" then return GetAllMobTarget()
+    elseif taskType == "Mob" then return GetMobTarget()
+    elseif taskType == "Alt Help" then return GetAltTarget()
+    end
+    return nil
+end
+
+local function ExecuteFarm(target, island, farmType)
+    local char = GetCharacter()
+    local root = char and char:FindFirstChild("HumanoidRootPart")
+    if not char or not target or Shared.Recovering or not root then return end
+    if Shared.MovingIsland then return end
+    Shared.Target = target
+    Shared.AltActive = (Toggles.AltHelp.Value and farmType == "Boss") and ShouldWaitForAlt() or false
+    if Toggles.IslandTP.Value then
+        if island and island ~= "" and island ~= "Unknown" and island ~= Shared.Island then
+            Shared.MovingIsland = true
+            Remotes.TP_Portal:FireServer(island)
+            task.wait(tonumber(Options.IslandTPDelay.Value) or 0.8)
+            Shared.Island = island
+            Shared.MovingIsland = false
+            return
+        end
+    end
+    local targetPivot = target:GetPivot()
+    local targetPos = targetPivot.Position
+    local distVal = tonumber(Options.FarmDistance.Value) or 10
+    local posType = Options.FarmPosition.Value
+    local finalPos
+    if Shared.AltActive then finalPos = targetPos + Vector3.new(0, 120, 0)
+    elseif posType == "Above" then finalPos = targetPos + Vector3.new(0, distVal, 0)
+    elseif posType == "Below" then finalPos = targetPos + Vector3.new(0, -distVal, 0)
+    else finalPos = (targetPivot * CFrame.new(0, 0, distVal)).Position end
+    local finalCF = CFrame.lookAt(finalPos, targetPos)
+    if (root.Position - finalPos).Magnitude > 0.1 then
+        if Options.FarmMovement.Value == "Teleport" then root.CFrame = finalCF
+        else
+            local dist = (root.Position - finalPos).Magnitude
+            local speed = tonumber(Options.FarmTweenSpeed.Value) or 180
+            game:GetService("TweenService"):Create(root, TweenInfo.new(dist/speed, Enum.EasingStyle.Linear), {CFrame = finalCF}):Play()
+        end
+    end
+    root.AssemblyLinearVelocity = Vector3.zero
+    root.AssemblyAngularVelocity = Vector3.zero
+end
+
+-- Feature loops
+local function Loop_WebhookSend()
+    while Toggles.SendWebhook.Value do
+        PostWebhook()
+        task.wait(math.max(Options.WebhookInterval.Value, 0.5) * 60)
+    end
+end
+
+local function Loop_Haki()
+    while task.wait(0.5) do
+        if Toggles.ObsHaki.Value and not CheckObsHaki() then Remotes.ObserHaki:FireServer("Toggle") end
+        if Toggles.ArmHaki.Value and not CheckArmHaki() then Remotes.ArmHaki:FireServer("Toggle") task.wait(0.5) end
+        if Toggles.ConqHaki.Value then
+            if Toggles.HakiTargetOnly.Value then
+                if not Shared.Farm or not Shared.Target or not Shared.Target.Parent then continue end
+            end
+            Remotes.ConquerorHaki:FireServer("Activate")
+        end
+    end
+end
+
+local function Loop_AutoAttack()
+    while task.wait(Options.AttackSpeed.Value) do
+        if Toggles.AutoAttack.Value then Remotes.M1:FireServer() end
+    end
+end
+
+local function Loop_KillAura()
+    while Toggles.KillAura.Value do
+        if IsBusy() then task.wait(0.1) continue end
+        local nearest, maxRange = nil, tonumber(Options.AuraRange.Value) or 200
+        local lastDist = maxRange
+        local char = Plr.Character
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root then
+            for _, v in ipairs(PATH.Mobs:GetChildren()) do
+                if v:IsA("Model") then
+                    local dist = (root.Position - v:GetPivot().Position).Magnitude
+                    if dist <= lastDist then
+                        local hum = v:FindFirstChildOfClass("Humanoid")
+                        if hum and hum.Health > 0 then nearest = v lastDist = dist end
+                    end
+                end
+            end
+        end
+        if nearest then EquipWeapon() pcall(function() Remotes.M1:FireServer(nearest:GetPivot().Position) end) end
+        task.wait(tonumber(Options.AuraCD.Value) or 0.12)
+    end
+end
+
+local function Loop_AutoSkill()
+    local keyToEnum = {["Z"]=Enum.KeyCode.Z,["X"]=Enum.KeyCode.X,["C"]=Enum.KeyCode.C,["V"]=Enum.KeyCode.V,["F"]=Enum.KeyCode.F}
+    local keyToSlot = {["Z"]=1,["X"]=2,["C"]=3,["V"]=4,["F"]=5}
+    local priority = {"Z","X","C","V","F"}
+    while task.wait() do
+        if not Toggles.AutoSkill.Value then continue end
+        local target = Shared.Target
+        if Toggles.SkillTargetOnly.Value and (not Shared.Farm or not target or not target.Parent) then continue end
+        local canExecute = true
+        if Toggles.SkillBossOnly.Value then
+            if not target or not target.Parent then canExecute = false
+            else
+                local npcHum = target:FindFirstChildOfClass("Humanoid")
+                local isRealBoss = target.Name:find("Boss") and not table.find(Lists.MiniBossList, target.Name)
+                local hpPct = npcHum and (npcHum.Health / npcHum.MaxHealth * 100) or 101
+                if not isRealBoss or hpPct > (tonumber(Options.SkillBossHP.Value) or 100) then canExecute = false end
+            end
+        end
+        if not canExecute then continue end
+        local char = GetCharacter()
+        local tool = char and char:FindFirstChildOfClass("Tool")
+        if not tool then continue end
+        local toolType = GetWeaponType(tool.Name)
+        local useMode = Options.SkillMode.Value
+        local selected = Options.PickSkills.Value or {}
+        if useMode == "Instant" then
+            for _, key in ipairs(priority) do
+                if selected[key] then
+                    if toolType == "Power" then Remotes.UseFruit:FireServer("UseAbility", {["FruitPower"]=tool.Name:gsub(" Fruit",""),["KeyCode"]=keyToEnum[key]})
+                    else Remotes.UseSkill:FireServer(keyToSlot[key]) end
+                end
+            end
+            task.wait(0.01)
+        else
+            for _, key in ipairs(priority) do
+                if selected[key] and IsSkillReady(key) then
+                    if toolType == "Power" then Remotes.UseFruit:FireServer("UseAbility", {["FruitPower"]=tool.Name:gsub(" Fruit",""),["KeyCode"]=keyToEnum[key]})
+                    else Remotes.UseSkill:FireServer(keyToSlot[key]) end
+                    task.wait(0.1)
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function Loop_AutoCombo()
+    Shared.ComboIdx = 1
+    while Toggles.AutoCombo.Value do
+        task.wait(0.1)
+        local rawPattern = Options.ComboPattern.Value
+        if not rawPattern or rawPattern == "" then continue end
+        Shared.ParsedCombo = {}
+        for item in string.gmatch(rawPattern:upper():gsub("%s+",""), "([^,>]+)") do table.insert(Shared.ParsedCombo, item) end
+        if #Shared.ParsedCombo == 0 then continue end
+        if Shared.ComboIdx > #Shared.ParsedCombo then Shared.ComboIdx = 1 end
+        if IsBusy() then local s = tick() repeat task.wait(0.1) until not IsBusy() or (tick()-s > 8) end
+        task.wait(0.4)
+        if Toggles.ComboBossOnly.Value then
+            if not Shared.Target or not Shared.Target.Parent or not Shared.Target.Name:lower():find("boss") then
+                Shared.ComboIdx = 1 task.wait(0.5) continue
+            end
+        end
+        local currentAction = Shared.ParsedCombo[Shared.ComboIdx]
+        local waitTime = tonumber(currentAction)
+        if waitTime then
+            if Options.ComboMode.Value == "Normal" then task.wait(waitTime) end
+            Shared.ComboIdx = Shared.ComboIdx + 1
+            continue
+        end
+        if IsSkillReady(currentAction) then
+            local isF = (currentAction == "F")
+            if isF then
+                Shared.GlobalPrio = "COMBO"
+                local cTitle = Options.Title_Combo.Value
+                local cRune = Options.Rune_Combo.Value
+                if cTitle and cTitle ~= "None" then Remotes.EquipTitle:FireServer(cTitle) end
+                if cRune and cRune ~= "None" then Remotes.EquipRune:FireServer("Equip", cRune) end
+                Shared.LastSwitch.Title = cTitle
+                Shared.LastSwitch.Rune = cRune
+                task.wait(0.7)
+                local uiConfirmed = false
+                repeat
+                    EquipWeapon()
+                    Remotes.UseSkill:FireServer(5)
+                    local check = tick()
+                    repeat task.wait(0.1) if not IsSkillReady("F") then uiConfirmed = true end until uiConfirmed or (tick()-check > 1.0)
+                until uiConfirmed or not Toggles.AutoCombo.Value
+                local ffStarted = false
+                local catchTimer = tick()
+                repeat task.wait() if IsBusy() then ffStarted = true end until ffStarted or (tick()-catchTimer > 2.0)
+                if ffStarted then local s = tick() repeat task.wait(0.1) until not IsBusy() or (tick()-s > 15)
+                else task.wait(2.5) end
+                Shared.GlobalPrio = "FARM"
+                Shared.LastSwitch.Title = ""
+                Shared.LastSwitch.Rune = ""
+                Shared.ComboIdx = Shared.ComboIdx + 1
+                task.wait(0.3)
+            else
+                local slot = ({["Z"]=1,["X"]=2,["C"]=3,["V"]=4})[currentAction] or 1
+                local stepDone = false
+                repeat
+                    Remotes.UseSkill:FireServer(slot)
+                    local check = tick()
+                    repeat task.wait(0.1) if not IsSkillReady(currentAction) or IsBusy() then stepDone = true end until stepDone or (tick()-check > 1.2)
+                until stepDone or not Toggles.AutoCombo.Value
+                if stepDone then Shared.ComboIdx = Shared.ComboIdx + 1 task.wait(0.2) end
+            end
+        else
+            task.wait(0.2)
+        end
+    end
+end
+
+local function Loop_AutoStats()
+    local pointsPath = Plr:WaitForChild("Data"):WaitForChild("StatPoints")
+    local MAX_STAT = 11500
+    while task.wait(1) do
+        if Toggles.AutoStats.Value then
+            local available = pointsPath.Value
+            if available > 0 then
+                local selectedStats = Options.PickStats.Value
+                local activeStats = {}
+                for statName, enabled in pairs(selectedStats) do
+                    if enabled and (Shared.Stats[statName] or 0) < MAX_STAT then table.insert(activeStats, statName) end
+                end
+                local statCount = #activeStats
+                if statCount > 0 then
+                    local perStat = math.floor(available / statCount)
+                    if perStat > 0 then for _, stat in ipairs(activeStats) do Remotes.AddStat:FireServer(stat, perStat) end
+                    else Remotes.AddStat:FireServer(activeStats[1], available) end
+                end
+            end
+        end
+        if not Toggles.AutoStats.Value then break end
+    end
+end
+
+local function Loop_GemRoll()
+    local selectedStats = Options.PickGemStats.Value or {}
+    local selectedRanks = Options.PickGemRank.Value or {}
+    local hasStat = false for _ in pairs(selectedStats) do hasStat = true break end
+    local hasRank = false for _ in pairs(selectedRanks) do hasRank = true break end
+    if not hasStat or not hasRank then
+        Library:Notify("Select at least one Stat and Rank first!", 5)
+        Toggles.AutoGemRoll:SetValue(false)
+        return
+    end
+    while Toggles.AutoGemRoll.Value do
+        if not next(Shared.GemStats) then task.wait(0.1) continue end
+        local workDone = true
+        for _, statName in ipairs(Lists.GemStat) do
+            if selectedStats[statName] then
+                local currentData = Shared.GemStats[statName]
+                if currentData and not selectedRanks[currentData.Rank] then
+                    workDone = false
+                    local ok, err = pcall(function() Remotes.RerollSingleStat:InvokeServer(statName) end)
+                    if not ok then Library:Notify("ERROR: " .. tostring(err):gsub("<","["), 5) end
+                    task.wait(tonumber(Options.GemRollCD.Value) or 0.1)
+                    break
+                end
+            end
+        end
+        if workDone then Library:Notify("Gem stats done!", 5) Toggles.AutoGemRoll:SetValue(false) break end
+        task.wait()
+    end
+end
+
+local function Loop_RollManager()
+    while task.wait() do
+        if Toggles.AutoTrait.Value then
+            local traitUI = PGui:WaitForChild("TraitRerollUI").MainFrame.Frame.Content.TraitPage.TraitGottenFrame.Holder.Trait.TraitGotten
+            local confirmFrame = PGui.TraitRerollUI.MainFrame.Frame.Content:FindFirstChild("AreYouSureYouWantToRerollFrame")
+            local currentTrait = traitUI.Text
+            local selected = Options.PickTrait.Value or {}
+            if selected[currentTrait] then Library:Notify("Got Trait: " .. currentTrait, 5) Toggles.AutoTrait:SetValue(false)
+            else
+                pcall(SyncTraitAutoSkip)
+                if confirmFrame and confirmFrame.Visible then Remotes.TraitConfirm:FireServer(true) task.wait(0.1) end
+                Remotes.Roll_Trait:FireServer()
+                task.wait(Options.RollDelay.Value)
+            end
+            continue
+        end
+        if Toggles.AutoRace.Value then
+            local currentRace = Plr:GetAttribute("CurrentRace")
+            local selected = Options.PickRace.Value or {}
+            if selected[currentRace] then Library:Notify("Got Race: " .. currentRace, 5) Toggles.AutoRace:SetValue(false)
+            else pcall(SyncRaceSettings) Remotes.UseItem:FireServer("Use", "Race Reroll", 1) task.wait(Options.RollDelay.Value) end
+            continue
+        end
+        if Toggles.AutoClan.Value then
+            local currentClan = Plr:GetAttribute("CurrentClan")
+            local selected = Options.PickClan.Value or {}
+            if selected[currentClan] then Library:Notify("Got Clan: " .. currentClan, 5) Toggles.AutoClan:SetValue(false)
+            else pcall(SyncClanSettings) Remotes.UseItem:FireServer("Use", "Clan Reroll", 1) task.wait(Options.RollDelay.Value) end
+            continue
+        end
+        task.wait(0.4)
+    end
+end
+
+local function EnsureRollManager()
+    Thread("RollManager", Loop_RollManager, Toggles.AutoTrait.Value or Toggles.AutoRace.Value or Toggles.AutoClan.Value)
+end
+
+local function Loop_SpecPassive()
+    pcall(function()
+        local remote = Remotes.SpecPassiveSkip
+        if remote then remote:FireServer({["Epic"]=true,["Legendary"]=true,["Mythical"]=true}) end
+    end)
+    task.wait(Options.SpecRollCD.Value)
+    while Toggles.AutoSpecPassive.Value do
+        local targetWeapons = Options.PassiveWeapon.Value or {}
+        local targetPassives = Options.PickPassive.Value or {}
+        local workDone = false
+        if type(Shared.Passives) ~= "table" then Shared.Passives = {} end
+        for weaponName, isWeaponEnabled in pairs(targetWeapons) do
+            if not isWeaponEnabled then continue end
+            local currentData = Shared.Passives[weaponName]
+            local currentName = (type(currentData) == "table" and currentData.Name) or (type(currentData) == "string" and currentData) or "None"
+            local currentBuffs = type(currentData) == "table" and (currentData.RolledBuffs or {}) or {}
+            local isCorrectName = targetPassives[currentName]
+            local meetsAllStats = true
+            if isCorrectName and type(currentBuffs) == "table" then
+                for statKey, rolledValue in pairs(currentBuffs) do
+                    local sliderId = "Min_" .. currentName:gsub("%s+","") .. "_" .. statKey
+                    local minRequired = Options[sliderId] and Options[sliderId].Value or 0
+                    if tonumber(rolledValue) and rolledValue < minRequired then meetsAllStats = false break end
+                end
+            else meetsAllStats = false end
+            if not isCorrectName or not meetsAllStats then
+                workDone = true
+                Remotes.SpecPassiveReroll:FireServer(weaponName)
+                local startWait = tick()
+                repeat
+                    task.wait()
+                    local checkData = Shared.Passives[weaponName]
+                    local checkName = (type(checkData) == "table" and checkData.Name) or (type(checkData) == "string" and checkData) or ""
+                until (checkName ~= currentName) or (tick() - startWait > 1.5)
+                break
+            end
+        end
+        if not workDone then Library:Notify("Passive done!", 5) Toggles.AutoSpecPassive:SetValue(false) break end
+        task.wait()
+    end
+end
+
+local function Loop_SkillTree()
+    while Toggles.AutoSkillTree.Value do
+        task.wait(0.5)
+        local points = Shared.SkillTree.SkillPoints
+        if points <= 0 then continue end
+        for _, branch in pairs(Modules.SkillTree.Branches) do
+            for _, node in ipairs(branch.Nodes) do
+                if not Shared.SkillTree.Nodes[node.Id] then
+                    if points >= node.Cost then
+                        local ok = pcall(function() Remotes.SkillTreeUpgrade:FireServer(node.Id) end)
+                        if ok then Shared.SkillTree.SkillPoints = Shared.SkillTree.SkillPoints - node.Cost task.wait(0.3) end
+                    end
+                    break
+                end
+            end
+        end
+    end
+end
+
+local function Loop_ArtifactMilestone()
+    local milestone = 1
+    while Toggles.ArtifactMilestone.Value do
+        Remotes.ArtifactClaim:FireServer(milestone)
+        milestone = milestone + 1
+        if milestone > 40 then milestone = 1 end
+        task.wait(1)
+    end
+end
+
+local function Loop_AutoShop()
+    local ShopUI = UI.Merchant.Regular
+    local Holder = ShopUI:FindFirstChild("Holder", true)
+    local LastTimerText = ""
+    local function BuyItems()
+        if Shared.MerchantExecute then return end
+        Shared.MerchantExecute = true
+        if Shared.FirstMerchantSync then
+            ShopUI.Enabled = true
+            ShopUI.MainFrame.Visible = true
+            task.wait(0.5)
+            local closeBtn = ShopUI:FindFirstChild("CloseButton", true)
+            if closeBtn then gsc(closeBtn) task.wait(1.8) end
+        end
+        OpenShopInterface()
+        task.wait(2)
+        local selectedItems = Options.PickShopItems.Value
+        for _, child in pairs(Holder:GetChildren()) do
+            if child:IsA("Frame") and child.Name ~= "Item" then
+                local stockLabel = child:FindFirstChild("StockAmountForThatItem", true)
+                local currentStock = 0
+                if stockLabel then currentStock = tonumber(stockLabel.Text:match("%d+")) or 0 end
+                Shared.CurrentStock[child.Name] = currentStock
+                if currentStock > 0 and selectedItems[child.Name] then
+                    pcall(function() Remotes.MerchantBuy:InvokeServer(child.Name, 99) end)
+                    task.wait(math.random(11,17)/10)
+                end
+            end
+        end
+        if ShopUI.MainFrame then ShopUI.MainFrame.Visible = false end
+        Shared.FirstMerchantSync = true
+        Shared.MerchantExecute = false
+    end
+    local function SyncClock()
+        OpenShopInterface()
+        task.wait(1)
+        local Label = ShopUI:FindFirstChild("RefreshTimerLabel", true)
+        if Label and Label.Text:find(":") then
+            local s = GetSecondsFromTimer(Label.Text)
+            if s then Shared.LocalMerchantTime = s end
+        end
+        if ShopUI.MainFrame then ShopUI.MainFrame.Visible = false end
+    end
+    SyncClock()
+    while Toggles.AutoShop.Value do
+        local Label = ShopUI:FindFirstChild("RefreshTimerLabel", true)
+        if Label and Label.Text ~= "" then
+            local currentText = Label.Text
+            local s = GetSecondsFromTimer(currentText)
+            if s then
+                Shared.LocalMerchantTime = s
+                if currentText ~= LastTimerText then LastTimerText = currentText Shared.LastTimerTick = tick() end
+            else Shared.LocalMerchantTime = math.max(0, Shared.LocalMerchantTime - 1) end
+        else Shared.LocalMerchantTime = math.max(0, Shared.LocalMerchantTime - 1) end
+        local isRefresh = (Shared.LocalMerchantTime <= 1) or (Shared.LocalMerchantTime >= 1799)
+        if not Shared.FirstMerchantSync or isRefresh then task.spawn(BuyItems) end
+        if tick() - Shared.LastTimerTick > 30 then task.spawn(SyncClock) Shared.LastTimerTick = tick() end
+        if ShopTimerLabel then ShopTimerLabel:SetText(FormatTimer(Shared.LocalMerchantTime)) end
+        task.wait(1)
+    end
+end
+
+local function Loop_Trade()
+    while task.wait(0.5) do
+        local inTradeUI = PGui:FindFirstChild("InTradingUI") and PGui.InTradingUI.MainFrame.Visible
+        local requestUI = PGui:FindFirstChild("TradeRequestUI") and PGui.TradeRequestUI.TradeRequest.Visible
+        if Toggles.AcceptTradeRequest.Value and requestUI then Remotes.TradeRespond:FireServer(true) task.wait(1) end
+        if Toggles.SendTrade.Value and not inTradeUI and not requestUI then
+            local targetPlr = Options.TradeTarget.Value
+            if targetPlr and typeof(targetPlr) == "Instance" then Remotes.TradeSend:FireServer(targetPlr.UserId) task.wait(3) end
+        end
+        if inTradeUI and Toggles.AutoAcceptTrade.Value then
+            local selectedItems = Options.TradeItems.Value or {}
+            local itemsToAdd = {}
+            for itemName, enabled in pairs(selectedItems) do
+                if enabled then
+                    local alreadyIn = false
+                    if Shared.TradeState.myItems then
+                        for _, tradeItem in pairs(Shared.TradeState.myItems) do if tradeItem.name == itemName then alreadyIn = true break end end
+                    end
+                    if not alreadyIn then table.insert(itemsToAdd, itemName) end
+                end
+            end
+            if #itemsToAdd > 0 then
+                for _, itemName in ipairs(itemsToAdd) do
+                    local invQty = 0
+                    for _, item in pairs(Shared.Cached.Inv) do if item.name == itemName then invQty = item.quantity break end end
+                    if invQty > 0 then Remotes.TradeAddItem:FireServer("Items", itemName, invQty) task.wait(0.5) end
+                end
+            else
+                if not Shared.TradeState.myReady then Remotes.TradeReady:FireServer(true)
+                elseif Shared.TradeState.myReady and Shared.TradeState.theirReady then
+                    if Shared.TradeState.phase == "confirming" and not Shared.TradeState.myConfirm then Remotes.TradeConfirm:FireServer() end
+                end
+            end
+        end
+    end
+end
+
+local function Loop_AutoChest()
+    while task.wait(2) do
+        if not Toggles.AutoChest.Value then break end
+        local selected = Options.PickChests.Value
+        if type(selected) ~= "table" then continue end
+        for _, rarityName in ipairs(Lists.Rarities) do
+            if selected[rarityName] == true then
+                local fullName = (rarityName == "Aura Crate") and "Aura Crate" or (rarityName .. " Chest")
+                pcall(function() Remotes.UseItem:FireServer("Use", fullName, 10000) end)
+                task.wait(1)
+            end
+        end
+    end
+end
+
+local function Loop_AutoCraft()
+    while task.wait(1) do
+        if Toggles.AutoCraft.Value then
+            local selected = Options.PickCraft.Value
+            for _, item in pairs(Shared.Cached.Inv) do
+                if selected["DivineGrail"] and item.name == "Broken Sword" and item.quantity >= 3 then
+                    pcall(function() Remotes.GrailCraft:InvokeServer("DivineGrail", math.min(math.floor(item.quantity/3), 99)) end)
+                    task.wait(0.5)
+                end
+                if selected["SlimeKey"] and item.name == "Slime Shard" and item.quantity >= 2 then
+                    pcall(function() Remotes.SlimeCraft:InvokeServer("SlimeKey", math.min(math.floor(item.quantity/2), 99)) end)
+                end
+            end
+        end
+        if not Toggles.AutoCraft.Value then break end
+    end
+end
+
+local function Loop_ArtifactSystem()
+    while task.wait(5) do
+        if not Shared.ArtifactSession.Inventory or not next(Shared.ArtifactSession.Inventory) then
+            Remotes.ArtifactUnequip:FireServer("") task.wait(2) continue
+        end
+        local lockQueue, deleteQueue, upgradeQueue = {}, {}, {}
+        for uuid, data in pairs(Shared.ArtifactSession.Inventory) do
+            local res = EvalArtifact(uuid, data)
+            if res.lock then table.insert(lockQueue, uuid) end
+            if res.delete then table.insert(deleteQueue, uuid) end
+            if res.upgrade then
+                local targetLvl = Options.UpgradeCap.Value
+                if Toggles.UpgradeStaged.Value then
+                    targetLvl = math.min(math.floor(data.Level/3)*3+3, Options.UpgradeCap.Value)
+                end
+                table.insert(upgradeQueue, {["UUID"]=uuid,["Levels"]=targetLvl})
+            end
+        end
+        for _, uuid in ipairs(lockQueue) do Remotes.ArtifactLock:FireServer(uuid, true) task.wait(0.1) end
+        if #deleteQueue > 0 then
+            for i = 1, #deleteQueue, 50 do
+                local chunk = {}
+                for j = i, math.min(i+49, #deleteQueue) do table.insert(chunk, deleteQueue[j]) end
+                Remotes.MassDelete:FireServer(chunk) task.wait(0.6)
+            end
+            Remotes.ArtifactUnequip:FireServer("")
+        end
+        if #upgradeQueue > 0 then
+            for i = 1, #upgradeQueue, 50 do
+                local chunk = {}
+                for j = i, math.min(i+49, #upgradeQueue) do table.insert(chunk, upgradeQueue[j]) end
+                Remotes.MassUpgrade:FireServer(chunk) task.wait(0.6)
+            end
+        end
+        if Toggles.ArtifactEquip.Value then AutoEquipBest() end
+    end
+end
+
+local function Loop_Dungeon()
+    while Toggles.AutoDungeon.Value do
+        task.wait(1)
+        local selected = Options.PickDungeon.Value
+        if not selected then continue end
+        if PGui.DungeonPortalJoinUI.LeaveButton.Visible then continue end
+        local targetIsland = "Dungeon"
+        if selected == "BossRush" then targetIsland = "Sailor"
+        elseif selected == "InfiniteTower" then targetIsland = "Tower" end
+        if tick() - Shared.LastDungeon > 15 then
+            Remotes.OpenDungeon:FireServer(tostring(selected))
+            Shared.LastDungeon = tick()
+            task.wait(1)
+        end
+        if not PGui.DungeonPortalJoinUI.LeaveButton.Visible then
+            local portal = workspace:FindFirstChild("ActiveDungeonPortal")
+            if not portal then
+                if Shared.Island ~= targetIsland then Remotes.TP_Portal:FireServer(targetIsland) Shared.Island = targetIsland task.wait(2.5) end
+            else
+                local root = GetCharacter():FindFirstChild("HumanoidRootPart")
+                if root then
+                    root.CFrame = portal.CFrame task.wait(0.2)
+                    local prompt = portal:FindFirstChild("JoinPrompt")
+                    if prompt then fireproximityprompt(prompt) task.wait(1) end
+                end
+            end
+        end
+    end
+end
+
+-- Remote events
+Remotes.UpInventory.OnClientEvent:Connect(function(category, data)
+    Shared.InventorySynced = true
+    if category == "Items" then
+        Shared.Cached.Inv = data or {}
+        table.clear(Lists.OwnedItem)
+        for _, item in pairs(data) do if not table.find(Lists.OwnedItem, item.name) then table.insert(Lists.OwnedItem, item.name) end end
+        table.sort(Lists.OwnedItem)
+        if Options.TradeItems then Options.TradeItems:SetValues(Lists.OwnedItem) end
+    elseif category == "Runes" then
+        table.clear(Lists.RuneList)
+        table.insert(Lists.RuneList, "None")
+        for name, _ in pairs(data) do table.insert(Lists.RuneList, name) end
+        table.sort(Lists.RuneList)
+        local runeDropdowns = {"DefaultRune","Rune_Mob","Rune_Boss","Rune_BossHP"}
+        for _, dd in ipairs(runeDropdowns) do
+            if Options[dd] then
+                local cur = Options[dd].Value
+                Options[dd]:SetValues(Lists.RuneList)
+                if cur and cur ~= "" then Options[dd]:SetValue(cur) end
+            end
+        end
+    elseif category == "Accessories" then
+        table.clear(Shared.Cached.Accessories)
+        if type(data) == "table" then
+            for _, accInfo in ipairs(data) do
+                if accInfo.name and accInfo.quantity then Shared.Cached.Accessories[accInfo.name] = accInfo.quantity end
+            end
+        end
+        table.clear(Lists.OwnedAccessory)
+        local processed = {}
+        for _, item in ipairs(data) do
+            if (item.enchantLevel or 0) < 10 and not processed[item.name] then
+                table.insert(Lists.OwnedAccessory, item.name)
+                processed[item.name] = true
+            end
+        end
+        table.sort(Lists.OwnedAccessory)
+        if Options.PickEnchant then Options.PickEnchant:SetValues(Lists.OwnedAccessory) end
+    elseif category == "Sword" or category == "Melee" then
+        Shared.Cached.RawWeapCache[category] = data or {}
+        table.clear(Lists.OwnedWeapon)
+        local processed = {}
+        for _, cat in pairs({"Sword","Melee"}) do
+            for _, item in ipairs(Shared.Cached.RawWeapCache[cat]) do
+                if (item.blessingLevel or 0) < 10 and not processed[item.name] then
+                    table.insert(Lists.OwnedWeapon, item.name)
+                    processed[item.name] = true
+                end
+            end
+        end
+        table.sort(Lists.OwnedWeapon)
+        if Options.PickBlessing then Options.PickBlessing:SetValues(Lists.OwnedWeapon) end
+        table.clear(Lists.AllOwnedWeapons)
+        local allProcessed = {}
+        for _, cat in pairs({"Sword","Melee"}) do
+            for _, item in ipairs(Shared.Cached.RawWeapCache[cat]) do
+                if not allProcessed[item.name] then table.insert(Lists.AllOwnedWeapons, item.name) allProcessed[item.name] = true end
+            end
+        end
+        table.sort(Lists.AllOwnedWeapons)
+        if Options.PassiveWeapon then Options.PassiveWeapon:SetValues(Lists.AllOwnedWeapons) end
+    end
+end)
+
+RS.Remotes.NotifyItemDrop.OnClientEvent:Connect(function(data)
+    if not data or type(data) ~= "table" or not data.name then return end
+    NewItemsBuffer[data.name] = (NewItemsBuffer[data.name] or 0) + (data.quantity or 1)
+end)
+
+Remotes.StockUpdate.OnClientEvent:Connect(function(itemName, stockLeft)
+    Shared.CurrentStock[itemName] = tonumber(stockLeft)
+    if stockLeft == 0 then Library:Notify("[SHOP] Bought: " .. tostring(itemName), 2) end
+end)
+
+Remotes.UpSkillTree.OnClientEvent:Connect(function(data)
+    if data then Shared.SkillTree.Nodes = data.Nodes or {} Shared.SkillTree.SkillPoints = data.SkillPoints or 0 end
+end)
+
+if Remotes.SettingsSync then
+    Remotes.SettingsSync.OnClientEvent:Connect(function(data) Shared.Settings = data end)
+end
+
+Remotes.ArtifactSync.OnClientEvent:Connect(function(data)
+    Shared.ArtifactSession.Inventory = data.Inventory
+    Shared.ArtifactSession.Dust = data.Dust
+    local counts = {Helmet=0,Gloves=0,Body=0,Boots=0}
+    for _, item in pairs(data.Inventory) do if counts[item.Category] ~= nil then counts[item.Category] = counts[item.Category] + 1 end end
+    if ArtDustLabel then ArtDustLabel:SetText("Dust: " .. Comma(data.Dust)) end
+    if ArtHelmet then ArtHelmet:SetText("Helmet: " .. counts.Helmet .. "/500") end
+    if ArtGloves then ArtGloves:SetText("Gloves: " .. counts.Gloves .. "/500") end
+    if ArtBody then ArtBody:SetText("Body: " .. counts.Body .. "/500") end
+    if ArtBoots then ArtBoots:SetText("Boots: " .. counts.Boots .. "/500") end
+end)
+
+Remotes.TitleSync.OnClientEvent:Connect(function(data)
+    if data and data.unlocked then Lists.UnlockedTitle = data.unlocked end
+end)
+
+Remotes.HakiStateUpdate.OnClientEvent:Connect(function(arg1, arg2)
+    if arg1 == false then Shared.ArmHaki = false return end
+    if arg1 == Plr then Shared.ArmHaki = arg2 end
+end)
+
+if Remotes.BossUIUpdate then
+    Remotes.BossUIUpdate.OnClientEvent:Connect(function(mode, data)
+        if mode == "DamageStats" and data.stats then
+            for _, info in pairs(data.stats) do
+                if info.player and info.player:IsA("Player") then Shared.AltDamage[info.player.Name] = tonumber(info.percent) or 0 end
+            end
+        end
+    end)
+end
+
+Remotes.TradeUpdated.OnClientEvent:Connect(function(data) Shared.TradeState = data end)
+
+PATH.Mobs.ChildRemoved:Connect(function(child)
+    if child:IsA("Model") and child.Name:lower():find("boss") then table.clear(Shared.AltDamage) Shared.AltActive = false end
+end)
+
+Remotes.SpecPassiveUpdate.OnClientEvent:Connect(function(data)
+    if type(Shared.Passives) ~= "table" then Shared.Passives = {} end
+    if data and data.Passives then
+        for weaponName, info in pairs(data.Passives) do
+            Shared.Passives[weaponName] = type(info) == "table" and info or {Name=tostring(info),RolledBuffs={}}
+        end
+        pcall(UpdatePassiveLabel)
+    end
+end)
+
+Remotes.UpStatReroll.OnClientEvent:Connect(function(data)
+    if data and data.Stats then Shared.GemStats = data.Stats task.spawn(UpdateGemLabel) end
+end)
+
+Remotes.UpPlayerStats.OnClientEvent:Connect(function(data)
+    if data and data.Stats then Shared.Stats = data.Stats UpdateGemLabel() end
+end)
+
+Remotes.UpAscend.OnClientEvent:Connect(function(data)
+    if not Toggles.AutoAscend.Value then return end
+    UpdateAscendUI(data)
+    if data.isMaxed then Toggles.AutoAscend:SetValue(false) return end
+    if data.allMet then Library:Notify("Requirements met! Ascending...", 5) Remotes.Ascend:FireServer() task.wait(1) end
+end)
+
+-- Build the window
+local Window = Library:CreateWindow({
+    Title = "Mini Hub",
+    Footer = gameName .. " | Mini Hub | discord.gg/2ezFB7bH5u",
+    NotifySide = "Right",
+    ShowCustomCursor = false,
+    AutoShow = true,
+    Center = true,
+    EnableSidebarResize = true,
+    Font = Enum.Font.GothamBold,
+})
+
+-- Tabs (shuffled order and renamed)
+local Tabs = {
+    Overview   = Window:AddTab("Overview",    "info"),
+    Farm       = Window:AddTab("Farm",         "sword"),
+    Combat     = Window:AddTab("Combat",       "zap"),
+    Upgrades   = Window:AddTab("Upgrades",     "trending-up"),
+    Gear       = Window:AddTab("Gear",         "martini"),
+    Dungeon    = Window:AddTab("Dungeon",      "door-open"),
+    Character  = Window:AddTab("Character",    "user"),
+    World      = Window:AddTab("World",        "map-pin"),
+    Shop       = Window:AddTab("Shop",         "shopping-cart"),
+    Quests     = Window:AddTab("Quests",       "scroll"),
+    Tracker    = Window:AddTab("Tracker",      "send"),
+    Settings   = Window:AddTab("Settings",     "cog"),
+}
+
+local GB = {
+    Overview = {
+        Left  = { Info = Tabs.Overview:AddLeftGroupbox("Info", "info"), News = Tabs.Overview:AddLeftGroupbox("Quick Actions", "bolt") },
+        Right = { Notes = Tabs.Overview:AddRightGroupbox("Notes", "book") },
+    },
+    Gear = {
+        Left  = { Status = Tabs.Gear:AddLeftGroupbox("Artifact Status", "info"), Equip = Tabs.Gear:AddLeftGroupbox("Auto Equip", "kayak"), Upgrade = Tabs.Gear:AddLeftGroupbox("Auto Upgrade", "hammer") },
+        Right = { Lock = Tabs.Gear:AddRightGroupbox("Auto Lock", "lock"), Delete = Tabs.Gear:AddRightGroupbox("Auto Delete", "trash") },
+    },
+    Character = {
+        Left  = { Movement = Tabs.Character:AddLeftGroupbox("Movement", "user-cog"), Server = Tabs.Character:AddLeftGroupbox("Server", "server") },
+        Right = { Visual = Tabs.Character:AddRightGroupbox("Visual", "eye"), Safety = Tabs.Character:AddRightGroupbox("Safety", "shield") },
+    },
+    Tracker = {
+        Left  = { Config = Tabs.Tracker:AddLeftGroupbox("Webhook Config", "wrench") },
+    },
+}
+
+local TB = {
+    Farm = {
+        Left  = { AutofarmBox = Tabs.Farm:AddLeftTabbox(), ExtraBox = Tabs.Farm:AddLeftTabbox() },
+        Right = { SwitchBox = Tabs.Farm:AddRightTabbox() },
+    },
+    Combat = {
+        Left  = { HakiBox = Tabs.Combat:AddLeftTabbox(), SkillBox = Tabs.Combat:AddLeftTabbox() },
+    },
+    Upgrades = {
+        Left  = { StatBox = Tabs.Upgrades:AddLeftTabbox(), RollBox = Tabs.Upgrades:AddLeftTabbox() },
+        Right = { EnchantBox = Tabs.Upgrades:AddRightTabbox() },
+    },
+    Dungeon = {
+        Left  = { JoinBox = Tabs.Dungeon:AddLeftTabbox() },
+    },
+    World = {
+        Left  = { IslandBox = Tabs.World:AddLeftTabbox() },
+        Right = { NPCBox = Tabs.World:AddRightTabbox() },
+    },
+    Shop = {
+        Left  = { RegBox = Tabs.Shop:AddLeftTabbox(), ExtraBox = Tabs.Shop:AddLeftTabbox() },
+        Right = { ItemBox = Tabs.Shop:AddRightTabbox() },
+    },
+    Quests = {
+        Left  = { QuestBox = Tabs.Quests:AddLeftTabbox() },
+        Right = { PuzzleBox = Tabs.Quests:AddRightTabbox() },
+    },
+}
+
+local TT = {
+    Farm = {
+        Mobs    = TB.Farm.Left.AutofarmBox:AddTab("Mobs"),
+        Bosses  = TB.Farm.Left.AutofarmBox:AddTab("Bosses"),
+        Special = TB.Farm.Left.AutofarmBox:AddTab("Special"),
+        Config  = TB.Farm.Left.AutofarmBox:AddTab("Config"),
+        Alt     = TB.Farm.Left.ExtraBox:AddTab("Alt Help"),
+    },
+    Switch = {
+        TitleTab = TB.Farm.Right.SwitchBox:AddTab("Title"),
+        RuneTab  = TB.Farm.Right.SwitchBox:AddTab("Rune"),
+        BuildTab = TB.Farm.Right.SwitchBox:AddTab("Build"),
+    },
+    Combat = {
+        Haki   = TB.Combat.Left.HakiBox:AddTab("Haki"),
+        Skills = TB.Combat.Left.SkillBox:AddTab("Skills"),
+        Combo  = TB.Combat.Left.SkillBox:AddTab("Combo"),
+        Aura   = TB.Combat.Left.SkillBox:AddTab("Aura"),
+    },
+    Upgrades = {
+        Stats    = TB.Upgrades.Left.StatBox:AddTab("Stats"),
+        Gems     = TB.Upgrades.Left.StatBox:AddTab("Gems"),
+        Misc     = TB.Upgrades.Left.StatBox:AddTab("Other"),
+        Rolls    = TB.Upgrades.Left.RollBox:AddTab("Rolls"),
+        Ascend   = TB.Upgrades.Left.RollBox:AddTab("Ascend"),
+        Trade    = TB.Upgrades.Left.RollBox:AddTab("Trade"),
+        Enchant  = TB.Upgrades.Right.EnchantBox:AddTab("Enchant"),
+        Blessing = TB.Upgrades.Right.EnchantBox:AddTab("Blessing"),
+        Passive  = TB.Upgrades.Right.EnchantBox:AddTab("Passive"),
+    },
+    Dungeon = {
+        Join   = TB.Dungeon.Left.JoinBox:AddTab("Join"),
+        Config = TB.Dungeon.Left.JoinBox:AddTab("Config"),
+    },
+    World = {
+        Islands = TB.World.Left.IslandBox:AddTab("Islands"),
+        Quest   = TB.World.Left.IslandBox:AddTab("Quest NPCs"),
+        Misc    = TB.World.Left.IslandBox:AddTab("Other NPCs"),
+        Moveset = TB.World.Right.NPCBox:AddTab("Moveset"),
+        Mastery = TB.World.Right.NPCBox:AddTab("Mastery"),
+    },
+    Shop = {
+        Regular   = TB.Shop.Left.RegBox:AddTab("Regular"),
+        Dungeon   = TB.Shop.Left.RegBox:AddTab("Dungeon"),
+        Valentine = TB.Shop.Left.RegBox:AddTab("Valentine"),
+        Tower     = TB.Shop.Left.ExtraBox:AddTab("Tower"),
+        BossRush  = TB.Shop.Left.ExtraBox:AddTab("Rush"),
+        Chests    = TB.Shop.Right.ItemBox:AddTab("Chests"),
+        Craft     = TB.Shop.Right.ItemBox:AddTab("Craft"),
+    },
+    Quests = {
+        Lines   = TB.Quests.Left.QuestBox:AddTab("Questlines"),
+        Puzzles = TB.Quests.Right.PuzzleBox:AddTab("Puzzles"),
+    },
+}
+
+-- Priority
+local GB_Prio = Tabs.Farm:AddRightGroupbox("Priority Order", "arrow-up-down")
+for i = 1, #PriorityTasks do
+    GB_Prio:AddDropdown("SelectedPriority_" .. i, {
+        Text = "Priority " .. i,
+        Values = PriorityTasks,
+        Default = DefaultPriority[i],
+        Multi = false,
+        AllowNull = true,
+        Searchable = true,
+    })
+end
+
+-- Overview tab
+local execDisplayName = (identifyexecutor and identifyexecutor() or "Unknown")
+local statusText = isLimitedExecutor and "<font color='#FFA500'>Limited</font>" or "<font color='#30FF6A'>Working</font>"
+
+GB.Overview.Left.Info:AddLabel("<b>Mini Hub</b> — Sailor Piece", true)
+GB.Overview.Left.Info:AddLabel("<b>Executor:</b> " .. execDisplayName .. "\n<b>Status:</b> " .. statusText, true)
+
+GB.Overview.Left.News:AddButton("Redeem All Codes", function()
+    local allCodes = Modules.Codes.Codes
+    local playerLevel = Plr.Data.Level.Value
+    for codeName, data in pairs(allCodes) do
+        if playerLevel >= (data.LevelReq or 0) then
+            Library:Notify("Redeeming: " .. codeName, 4)
+            Remotes.UseCode:InvokeServer(codeName)
+            task.wait(2)
+        end
+    end
+end)
+
+GB.Overview.Right.Notes:AddLabel("- All features work on client side.\n- Some features require supported executor functions.\n- Join Discord for updates & key.", true)
+GB.Overview.Right.Notes:AddButton("Copy Discord Link", function()
+    setclipboard("https://discord.gg/2ezFB7bH5u")
+    Library:Notify("discord.gg/2ezFB7bH5u copied!", 3)
+end)
+
+-- Farm tab - Mobs
+TT.Farm.Mobs:AddDropdown("PickMob", {Text = "Select Mob(s)", Values = Lists.MobList, Default = nil, Multi = true, Searchable = true})
+TT.Farm.Mobs:AddButton("Refresh Mobs", RefreshMobLists)
+TT.Farm.Mobs:AddToggle("MobFarm", {Text = "Farm Selected Mob", Default = false})
+TT.Farm.Mobs:AddToggle("AllMobFarm", {Text = "Farm All Mobs", Default = false})
+TT.Farm.Mobs:AddToggle("LevelFarm", {Text = "Level Farm (Quest)", Default = false})
+
+-- Farm tab - Bosses
+TT.Farm.Bosses:AddDropdown("PickBoss", {Text = "Select Boss(es)", Values = Lists.BossList, Default = nil, Multi = true, Searchable = true})
+TT.Farm.Bosses:AddToggle("BossFarm", {Text = "Farm Selected Boss", Default = false})
+TT.Farm.Bosses:AddToggle("AllBossFarm", {Text = "Farm All Bosses", Default = false})
+TT.Farm.Bosses:AddDivider()
+TT.Farm.Bosses:AddDropdown("PickSummon", {Text = "Summon Boss", Values = Lists.SummonList, Default = nil, Multi = false, Searchable = true})
+TT.Farm.Bosses:AddDropdown("SummonDiff", {Text = "Difficulty", Values = Lists.DiffList, Default = nil, Multi = false, Searchable = true})
+TT.Farm.Bosses:AddToggle("AutoSummon", {Text = "Auto Summon", Default = false})
+TT.Farm.Bosses:AddToggle("SummonFarm", {Text = "Farm Summon Boss", Default = false})
+TT.Farm.Bosses:AddDivider()
+PityLabel = TT.Farm.Bosses:AddLabel("<b>Pity:</b> 0/25")
+TT.Farm.Bosses:AddDropdown("PityBuildBoss", {Text = "Build Pity Boss", Values = Lists.AllBossList, Default = nil, Multi = true, AllowNull = true, Searchable = true})
+TT.Farm.Bosses:AddDropdown("PityUseBoss", {Text = "Use Pity Boss", Values = Lists.AllBossList, Default = nil, Multi = false, AllowNull = true, Searchable = true})
+TT.Farm.Bosses:AddDropdown("PityDiff", {Text = "Pity Difficulty", Values = Lists.DiffList, Default = nil, Multi = false, Searchable = true})
+TT.Farm.Bosses:AddToggle("PityFarm", {Text = "Auto Pity Farm", Default = false})
+TT.Farm.Bosses:AddDivider()
+TT.Farm.Bosses:AddDropdown("OtherSummonPick", {Text = "Other Summon Boss", Values = Lists.OtherSummonList, Default = nil, Multi = false, AllowNull = true, Searchable = true})
+TT.Farm.Bosses:AddDropdown("OtherSummonDiff", {Text = "Difficulty", Values = Lists.DiffList, Default = nil, Multi = false, AllowNull = true, Searchable = true})
+TT.Farm.Bosses:AddToggle("AutoOtherSummon", {Text = "Auto Summon", Default = false})
+TT.Farm.Bosses:AddToggle("OtherSummonFarm", {Text = "Farm Other Summon", Default = false})
+
+-- Farm tab - Special / Config
+TT.Farm.Special:AddLabel("Weapon Settings", true)
+TT.Farm.Special:AddDropdown("WeaponTypeFilter", {Text = "Weapon Type(s)", Values = Lists.WeaponTypes, Default = nil, Multi = true})
+TT.Farm.Special:AddSlider("WeaponSwitchCD", {Text = "Switch Delay (s)", Default = 4, Min = 1, Max = 20, Rounding = 0})
+TT.Farm.Special:AddToggle("AutoWeapon", {Text = "Auto Switch Weapon", Default = true})
+
+TT.Farm.Config:AddDropdown("FarmMovement", {Text = "Movement Type", Values = {"Teleport","Tween"}, Default = "Tween", Multi = false, Searchable = true})
+TT.Farm.Config:AddDropdown("FarmPosition", {Text = "Farm Position", Values = {"Behind","Above","Below"}, Default = "Behind", Multi = false, Searchable = true})
+TT.Farm.Config:AddSlider("FarmDistance", {Text = "Farm Distance", Default = 12, Min = 0, Max = 30, Rounding = 0})
+TT.Farm.Config:AddSlider("FarmTweenSpeed", {Text = "Tween Speed", Default = 160, Min = 0, Max = 500, Rounding = 0})
+TT.Farm.Config:AddSlider("AttackSpeed", {Text = "Attack Cooldown", Default = 0, Min = 0, Max = 1, Rounding = 2})
+TT.Farm.Config:AddToggle("IslandTP", {Text = "Island Teleport", Default = true})
+TT.Farm.Config:AddSlider("IslandTPDelay", {Text = "Island TP Delay", Default = 0.67, Min = 0, Max = 2.5, Rounding = 2})
+TT.Farm.Config:AddSlider("FarmDistTP", {Text = "Target Dist TP [Tween]", Default = 0, Min = 0, Max = 100, Rounding = 0})
+TT.Farm.Config:AddToggle("Instakill", {Text = "Insta Kill", Default = false})
+TT.Farm.Config:AddDropdown("InstakillType", {Text = "Insta Kill Type", Values = {"V1","V2"}, Default = "V1", Multi = false})
+TT.Farm.Config:AddSlider("InstakillHP", {Text = "Trigger Below HP%", Default = 90, Min = 1, Max = 100, Rounding = 0})
+TT.Farm.Config:AddInput("InstakillMinHP", {Text = "Min MaxHP", Default = "100000", Numeric = true, Finished = true})
+
+TT.Farm.Alt:AddDropdown("AltBossPick", {Text = "Boss to Farm", Values = Lists.AllBossList, Default = nil, Multi = false, AllowNull = true, Searchable = true})
+TT.Farm.Alt:AddDropdown("AltDiff", {Text = "Difficulty", Values = Lists.DiffList, Default = nil, Multi = false, Searchable = true})
+for i = 1, 5 do
+    TT.Farm.Alt:AddDropdown("AltPlayer_" .. i, {Text = "Alt #" .. i, SpecialType = "Player", ExcludeLocalPlayer = true, Default = nil, Multi = false, AllowNull = true, Searchable = true})
+end
+TT.Farm.Alt:AddToggle("AltHelp", {Text = "Help Alt(s)", Default = false})
+
+-- Switch groups
+CreateSwitchGroup(TT.Switch.TitleTab, "Title", "Title", CombinedTitleList)
+CreateSwitchGroup(TT.Switch.RuneTab, "Rune", "Rune", Lists.RuneList)
+CreateSwitchGroup(TT.Switch.BuildTab, "Build", "Build", Lists.LoadoutList)
+
+-- Combat tab
+TT.Combat.Haki:AddToggle("ObsHaki", {Text = "Auto Observation Haki", Default = false})
+TT.Combat.Haki:AddToggle("ArmHaki", {Text = "Auto Armament Haki", Default = false})
+TT.Combat.Haki:AddToggle("ConqHaki", {Text = "Auto Conqueror Haki", Default = false})
+TT.Combat.Haki:AddToggle("HakiTargetOnly", {Text = "Target Only [Conqueror]", Default = false})
+
+TT.Combat.Skills:AddLabel("Farm already has M1 built in. Only enable if needed.", true)
+TT.Combat.Skills:AddToggle("AutoAttack", {Text = "Auto Attack", Default = false})
+TT.Combat.Skills:AddDropdown("PickSkills", {Text = "Skills to Use", Values = {"Z","X","C","V","F"}, Default = nil, Multi = true})
+TT.Combat.Skills:AddDropdown("SkillMode", {Text = "Mode", Values = {"Normal","Instant"}, Default = "Normal", Multi = false})
+TT.Combat.Skills:AddToggle("SkillTargetOnly", {Text = "Target Only", Default = false})
+TT.Combat.Skills:AddToggle("SkillBossOnly", {Text = "Boss Only", Default = false})
+TT.Combat.Skills:AddSlider("SkillBossHP", {Text = "Boss HP% Threshold", Default = 100, Min = 1, Max = 100, Rounding = 0})
+TT.Combat.Skills:AddToggle("AutoSkill", {Text = "Auto Use Skills", Default = false})
+
+TT.Combat.Combo:AddLabel("Pattern example: Z > X > C > 0.5 > V > F", true)
+TT.Combat.Combo:AddInput("ComboPattern", {Text = "Combo Pattern", Default = "Z > X > C > V > F"})
+TT.Combat.Combo:AddDropdown("ComboMode", {Text = "Mode", Values = {"Normal","Instant"}, Default = "Normal"})
+TT.Combat.Combo:AddToggle("ComboBossOnly", {Text = "Boss Only", Default = false})
+TT.Combat.Combo:AddToggle("AutoCombo", {Text = "Auto Skill Combo", Default = false, Callback = function(state)
+    if state and Toggles.AutoSkill.Value then Toggles.AutoSkill:SetValue(false) Library:Notify("Auto Skill disabled for combo mode.", 3) end
+end})
+
+TT.Combat.Aura:AddToggle("KillAura", {Text = "Kill Aura", Default = false})
+TT.Combat.Aura:AddSlider("AuraCD", {Text = "Attack Cooldown", Default = 0.1, Min = 0.1, Max = 1, Rounding = 2})
+TT.Combat.Aura:AddSlider("AuraRange", {Text = "Range", Default = 200, Min = 0, Max = 200, Rounding = 0})
+
+-- Upgrades tab
+TT.Upgrades.Stats:AddDropdown("PickStats", {Text = "Stats to Upgrade", Values = {"Melee","Defense","Sword","Power"}, Default = nil, Multi = true})
+TT.Upgrades.Stats:AddToggle("AutoStats", {Text = "Auto Upgrade Stats", Default = false})
+
+GemLabel = TT.Upgrades.Gems:AddLabel("N/A", true)
+TT.Upgrades.Gems:AddLabel("Reroll once to sync gem data.", true)
+TT.Upgrades.Gems:AddDropdown("PickGemStats", {Text = "Stat(s)", Values = Lists.GemStat, Default = nil, Multi = true, Searchable = true})
+TT.Upgrades.Gems:AddDropdown("PickGemRank", {Text = "Target Rank(s)", Values = Lists.GemRank, Default = nil, Multi = true, Searchable = true})
+TT.Upgrades.Gems:AddSlider("GemRollCD", {Text = "Roll Delay", Default = 0.1, Min = 0.01, Max = 1, Rounding = 2})
+TT.Upgrades.Gems:AddToggle("AutoGemRoll", {Text = "Auto Roll Gems", Default = false})
+
+TT.Upgrades.Misc:AddToggle("AutoSkillTree", {Text = "Auto Skill Tree", Default = false})
+TT.Upgrades.Misc:AddToggle("ArtifactMilestone", {Text = "Auto Artifact Milestone", Default = false})
+
+TT.Upgrades.Rolls:AddSlider("RollDelay", {Text = "Roll Delay", Default = 0.3, Min = 0.01, Max = 1, Rounding = 2})
+TT.Upgrades.Rolls:AddDropdown("PickTrait", {Text = "Target Trait(s)", Values = Lists.TraitList, Default = nil, Multi = true, Searchable = true})
+TT.Upgrades.Rolls:AddToggle("AutoTrait", {Text = "Auto Roll Trait", Default = false})
+TT.Upgrades.Rolls:AddDropdown("PickRace", {Text = "Target Race(s)", Values = Lists.RaceList, Default = nil, Multi = true, Searchable = true})
+TT.Upgrades.Rolls:AddToggle("AutoRace", {Text = "Auto Roll Race", Default = false})
+TT.Upgrades.Rolls:AddDropdown("PickClan", {Text = "Target Clan(s)", Values = Lists.ClanList, Default = nil, Multi = true, Searchable = true})
+TT.Upgrades.Rolls:AddToggle("AutoClan", {Text = "Auto Roll Clan", Default = false})
+
+for i = 1, 10 do
+    Lists.AscendLabels[i] = TT.Upgrades.Ascend:AddLabel("", true)
+    Lists.AscendLabels[i]:SetVisible(false)
+end
+TT.Upgrades.Ascend:AddToggle("AutoAscend", {Text = "Auto Ascend", Default = false})
+
+TT.Upgrades.Trade:AddDropdown("TradeTarget", {Text = "Target Player", SpecialType = "Player", ExcludeLocalPlayer = true, AllowNull = true, Searchable = true})
+TT.Upgrades.Trade:AddDropdown("TradeItems", {Text = "Items to Trade", Values = Lists.OwnedItem, Default = nil, Multi = true, Searchable = true})
+TT.Upgrades.Trade:AddToggle("SendTrade", {Text = "Auto Send Trade", Default = false})
+TT.Upgrades.Trade:AddToggle("AcceptTradeRequest", {Text = "Auto Accept Request", Default = false})
+TT.Upgrades.Trade:AddToggle("AutoAcceptTrade", {Text = "Auto Confirm Trade", Default = false})
+
+TT.Upgrades.Enchant:AddDropdown("PickEnchant", {Text = "Select Accessory", Values = Lists.OwnedAccessory, Default = nil, Multi = true, Searchable = true})
+TT.Upgrades.Enchant:AddToggle("AutoEnchant", {Text = "Auto Enchant", Default = false})
+TT.Upgrades.Enchant:AddToggle("AutoEnchantAll", {Text = "Auto Enchant All", Default = false})
+
+TT.Upgrades.Blessing:AddDropdown("PickBlessing", {Text = "Select Weapon", Values = Lists.OwnedWeapon, Default = nil, Multi = true, Searchable = true})
+TT.Upgrades.Blessing:AddToggle("AutoBlessing", {Text = "Auto Blessing", Default = false})
+TT.Upgrades.Blessing:AddToggle("AutoBlessingAll", {Text = "Auto Blessing All", Default = false})
+
+PassiveLabel = TT.Upgrades.Passive:AddLabel("N/A", true)
+TT.Upgrades.Passive:AddDropdown("PassiveWeapon", {Text = "Weapon(s)", Values = Lists.AllOwnedWeapons, Default = nil, Multi = true, Searchable = true})
+TT.Upgrades.Passive:AddDropdown("PickPassive", {Text = "Target Passive(s)", Values = Lists.SpecPassive, Default = nil, Multi = true, Searchable = true})
+TT.Upgrades.Passive:AddSlider("SpecRollCD", {Text = "Roll Delay", Default = 0.1, Min = 0.01, Max = 1, Rounding = 2})
+TT.Upgrades.Passive:AddToggle("AutoSpecPassive", {Text = "Auto Reroll Passive", Default = false})
+
+-- Gear tab (Artifacts)
+Tabs.Gear:UpdateWarningBox({Title = "⚠️ WARNING", Text = "Artifact features are experimental. Use at your own risk.", IsNormal = false, Visible = true, LockSize = true})
+ArtDustLabel = GB.Gear.Left.Status:AddLabel("Dust: N/A", true)
+ArtHelmet = GB.Gear.Left.Status:AddLabel("Helmet: 0/500")
+ArtGloves = GB.Gear.Left.Status:AddLabel("Gloves: 0/500")
+ArtBody = GB.Gear.Left.Status:AddLabel("Body: 0/500")
+ArtBoots = GB.Gear.Left.Status:AddLabel("Boots: 0/500")
+
+GB.Gear.Left.Upgrade:AddSlider("UpgradeCap", {Text = "Max Upgrade Level", Default = 0, Min = 0, Max = 15, Rounding = 0})
+GB.Gear.Left.Upgrade:AddDropdown("UpgradeMS", {Text = "Main Stat Filter", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Left.Upgrade:AddToggle("ArtifactUpgrade", {Text = "Auto Upgrade", Default = false})
+GB.Gear.Left.Upgrade:AddToggle("UpgradeStaged", {Text = "Upgrade in Stages", Default = false})
+
+GB.Gear.Left.Equip:AddDropdown("EquipType", {Text = "Piece Type", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Left.Equip:AddDropdown("EquipMS", {Text = "Main Stat", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Left.Equip:AddDropdown("EquipSS", {Text = "Sub Stat", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Left.Equip:AddToggle("ArtifactEquip", {Text = "Auto Equip Best", Default = false})
+
+GB.Gear.Right.Lock:AddDropdown("LockType", {Text = "Piece Type", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Right.Lock:AddDropdown("LockSet", {Text = "Set", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Right.Lock:AddDropdown("LockMS", {Text = "Main Stat", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Right.Lock:AddDropdown("LockSS", {Text = "Sub Stat", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Right.Lock:AddSlider("LockMinSS", {Text = "Min Sub-Stats", Default = 0, Min = 0, Max = 4, Rounding = 0})
+GB.Gear.Right.Lock:AddToggle("ArtifactLock", {Text = "Auto Lock", Default = false})
+
+GB.Gear.Right.Delete:AddDropdown("DelType", {Text = "Piece Type", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Right.Delete:AddDropdown("DelSet", {Text = "Set", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Right.Delete:AddDropdown("DelMS_Helmet", {Text = "Main Stat [Helmet]", Values = {"FlatDefense","Defense"}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Right.Delete:AddDropdown("DelMS_Gloves", {Text = "Main Stat [Gloves]", Values = {"Damage"}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Right.Delete:AddDropdown("DelMS_Body", {Text = "Main Stat [Body]", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Right.Delete:AddDropdown("DelMS_Boots", {Text = "Main Stat [Boots]", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Right.Delete:AddDropdown("DelSS", {Text = "Sub Stat Filter", Values = {}, Default = nil, Multi = true, Searchable = true})
+GB.Gear.Right.Delete:AddSlider("DelMinSS", {Text = "Min Sub-Stats", Default = 0, Min = 0, Max = 4, Rounding = 0})
+GB.Gear.Right.Delete:AddToggle("ArtifactDelete", {Text = "Auto Delete", Default = false})
+GB.Gear.Right.Delete:AddToggle("DeleteUnlocked", {Text = "Delete All Unlocked", Default = false})
+
+-- Dungeon tab
+TT.Dungeon.Join:AddDropdown("PickDungeon", {Text = "Select Dungeon", Values = Lists.DungeonList, Default = nil, Multi = false, AllowNull = true, Searchable = true})
+TT.Dungeon.Join:AddToggle("AutoDungeon", {Text = "Auto Join Dungeon", Default = false})
+TT.Dungeon.Join:AddToggle("AutoInfTower", {Text = "Auto Infinite Tower", Default = false})
+TT.Dungeon.Config:AddDropdown("DungeonDiff", {Text = "Difficulty", Values = {"Easy","Medium","Hard","Extreme"}, Default = nil, Multi = false, AllowNull = true, Searchable = true})
+TT.Dungeon.Config:AddToggle("AutoDungeonFarm", {Text = "Farm Inside Dungeon", Default = false})
+
+-- Character tab
+AddSliderToggle({Group=GB.Character.Left.Movement, Id="WS", Text="Walk Speed", Default=16, Min=16, Max=250})
+local TPW_T, TPW_S = AddSliderToggle({Group=GB.Character.Left.Movement, Id="TPW", Text="TP Walk Speed", Default=1, Min=1, Max=10, Rounding=1})
+AddSliderToggle({Group=GB.Character.Left.Movement, Id="JP", Text="Jump Power", Default=50, Min=0, Max=500})
+AddSliderToggle({Group=GB.Character.Left.Movement, Id="HH", Text="Hip Height", Default=2, Min=0, Max=10, Rounding=1})
+GB.Character.Left.Movement:AddToggle("Noclip", {Text = "Noclip"})
+GB.Character.Left.Movement:AddToggle("AntiKnockback", {Text = "Anti Knockback", Default = false})
+AddSliderToggle({Group=GB.Character.Left.Movement, Id="Grav", Text="Gravity", Default=196, Min=0, Max=500, Rounding=1})
+
+GB.Character.Left.Server:AddToggle("AntiAFK", {Text = "Anti AFK", Default = true, Disabled = not Support.Connections})
+GB.Character.Left.Server:AddToggle("AntiKick", {Text = "Anti Kick"})
+GB.Character.Left.Server:AddToggle("AutoReconnect", {Text = "Auto Reconnect"})
+GB.Character.Left.Server:AddToggle("NoGameplayPaused", {Text = "No Gameplay Paused"})
+GB.Character.Left.Server:AddButton({Text = "Rejoin", Func = function() Services.TeleportService:Teleport(game.PlaceId, Plr) end})
+GB.Character.Left.Server:AddToggle("AutoServerhop", {Text = "Auto Serverhop"})
+GB.Character.Left.Server:AddSlider("AutoHopMins", {Text = "Minutes", Default = 30, Min = 0, Max = 300, Compact = true})
+
+GB.Character.Right.Visual:AddToggle("FPSBoost", {Text = "FPS Boost"})
+GB.Character.Right.Visual:AddToggle("FPSBoostAF", {Text = "FPS Boost [Farm]"})
+GB.Character.Right.Visual:AddToggle("Fullbright", {Text = "Fullbright"})
+GB.Character.Right.Visual:AddToggle("NoFog", {Text = "No Fog"})
+GB.Character.Right.Visual:AddToggle("Disable3D", {Text = "Disable 3D Render"})
+AddSliderToggle({Group=GB.Character.Right.Visual, Id="Zoom", Text="Camera Zoom", Default=128, Min=128, Max=10000})
+AddSliderToggle({Group=GB.Character.Right.Visual, Id="FOV", Text="Field of View", Default=70, Min=30, Max=120})
+local FPS_T, FPS_S = AddSliderToggle({Group=GB.Character.Right.Visual, Id="LimitFPS", Text="Limit FPS", Disabled=not Support.FPS, Default=60, Min=5, Max=360})
+
+GB.Character.Right.Safety:AddLabel("Panic"):AddKeyPicker("PanicKey", {Default = "P", Text = "Panic"})
+GB.Character.Right.Safety:AddToggle("AutoKick", {Text = "Auto Kick", Default = true})
+GB.Character.Right.Safety:AddDropdown("KickType", {Text = "Kick Type", Values = {"Mod","Player Join","Public Server"}, Default = {"Mod"}, Multi = true, Searchable = true})
+
+-- World tab
+TT.World.Islands:AddDropdown("PickIsland", {Text = "Teleport to Island", Values = Lists.IslandList, Default = nil, Multi = false, AllowNull = true, Searchable = true, Callback = function(a)
+    if a then Remotes.TP_Portal:FireServer(a) else Library:Notify("Select an island first.", 2) end
+end})
+
+TT.World.Quest:AddDropdown("PickQuestNPC", {Text = "Quest NPC", Values = Lists.NPC_QuestList, Default = nil, Multi = false, AllowNull = true, Searchable = true, Callback = function(a)
+    SafeTP(a, {["DungeonUnlock"]="DungeonPortalsNPC",["SlimeKeyUnlock"]="SlimeCraftNPC"})
+end})
+
+TT.World.Misc:AddDropdown("PickMiscNPC", {Text = "Misc NPC", Values = Lists.NPC_MiscList, Default = nil, Multi = false, AllowNull = true, Searchable = true, Callback = function(a)
+    SafeTP(tostring(a), {["ArmHaki"]="HakiQuest",["Observation"]="ObservationBuyer"})
+end})
+TT.World.Misc:AddDropdown("PickAllNPC", {Text = "All NPCs", Values = Lists.AllNPCList, Default = nil, Multi = false, AllowNull = true, Searchable = true, Callback = function(a)
+    if a then SafeTP(tostring(a)) end
+end})
+
+TT.World.Moveset:AddDropdown("PickMovesetNPC", {Text = "Moveset NPC", Values = Lists.NPC_MovesetList, Default = nil, Multi = false, AllowNull = true, Searchable = true, Callback = function(a)
+    if a then SafeTP(tostring(a)) end
+end})
+TT.World.Mastery:AddDropdown("PickMasteryNPC", {Text = "Mastery NPC", Values = Lists.NPC_MasteryList, Default = nil, Multi = false, AllowNull = true, Searchable = true, Callback = function(a)
+    if a then SafeTP(tostring(a)) end
+end})
+
+-- Shop tab
+ShopTimerLabel = TT.Shop.Regular:AddLabel("Shop Refresh: N/A")
+TT.Shop.Regular:AddDropdown("PickShopItems", {Text = "Items to Buy", Values = Lists.ShopList, Default = nil, Multi = true, Searchable = true})
+TT.Shop.Regular:AddToggle("AutoShop", {Text = "Auto Buy Items", Default = false})
+
+TT.Shop.Dungeon:AddDropdown("PickDungeonItems", {Text = "Items to Buy", Values = Lists.DungeonShopList or {}, Default = nil, Multi = true, Searchable = true})
+TT.Shop.Dungeon:AddToggle("AutoDungeonShop", {Text = "Auto Buy Dungeon Items", Default = false})
+
+TT.Shop.Valentine:AddDropdown("PickValItems", {Text = "Items to Buy", Values = Lists.ValentineShopList, Default = nil, Multi = true, Searchable = true})
+TT.Shop.Valentine:AddToggle("AutoValShop", {Text = "Auto Buy Valentine Items", Default = false})
+
+TT.Shop.Tower:AddDropdown("PickTowerItems", {Text = "Items to Buy", Values = Lists.TowerShopList or {}, Default = nil, Multi = true, Searchable = true})
+TT.Shop.Tower:AddToggle("AutoTowerShop", {Text = "Auto Buy Tower Items", Default = false})
+
+TT.Shop.BossRush:AddDropdown("PickRushItems", {Text = "Items to Buy", Values = Lists.RushShopList or {}, Default = nil, Multi = true, Searchable = true})
+TT.Shop.BossRush:AddToggle("AutoRushShop", {Text = "Auto Buy Rush Items", Default = false})
+
+TT.Shop.Chests:AddDropdown("PickChests", {Text = "Chest Type(s)", Values = Lists.Rarities, Default = nil, Multi = true, Searchable = true})
+TT.Shop.Chests:AddToggle("AutoChest", {Text = "Auto Open Chests", Default = false})
+
+TT.Shop.Craft:AddDropdown("PickCraft", {Text = "Item(s) to Craft", Values = Lists.CraftList, Default = nil, Multi = true, Searchable = true})
+TT.Shop.Craft:AddToggle("AutoCraft", {Text = "Auto Craft", Default = false})
+
+-- Quests tab
+TT.Quests.Lines:AddDropdown("PickQuestline", {Text = "Select Questline", Values = Lists.QuestlineList, Default = nil, Multi = false, AllowNull = true, Searchable = true})
+TT.Quests.Lines:AddDropdown("QuestPlayer", {Text = "Player [Kill Task]", SpecialType = "Player", ExcludeLocalPlayer = true, AllowNull = true, Default = nil, Multi = false, Searchable = true})
+TT.Quests.Lines:AddDropdown("QuestDMGTarget", {Text = "Mob [Take Damage]", Values = Lists.AllEntitiesList, Default = nil, Multi = false, AllowNull = true, Searchable = true})
+TT.Quests.Lines:AddButton("Refresh", function() RefreshEntityList() end)
+TT.Quests.Lines:AddToggle("AutoQuestline", {Text = "Auto Questline [BETA]", Default = false})
+
+TT.Quests.Puzzles:AddButton({Text = "Dungeon Puzzle", Disabled = not Support.Proximity, Func = function()
+    if Plr.Data.Level.Value >= 5000 then SolvePuzzle("Dungeon") else Library:Notify("Level 5000 required!", 3) end
+end})
+TT.Quests.Puzzles:AddButton({Text = "Slime Key Puzzle", Disabled = not Support.Proximity, Func = function() SolvePuzzle("Slime") end})
+TT.Quests.Puzzles:AddButton({Text = "Demonite Puzzle", Disabled = not Support.Proximity, Func = function() SolvePuzzle("Demonite") end})
+TT.Quests.Puzzles:AddButton({Text = "Hogyoku Puzzle", Disabled = not Support.Proximity, Func = function()
+    if Plr.Data.Level.Value >= 8500 then SolvePuzzle("Hogyoku") else Library:Notify("Level 8500 required!", 3) end
+end})
+
+-- Tracker (Webhook) tab
+GB.Tracker.Left.Config:AddInput("WebhookLink", {Default = "", Numeric = false, Finished = false, ClearTextOnFocus = true, Text = "Webhook URL", Placeholder = "Paste webhook URL..."})
+GB.Tracker.Left.Config:AddInput("DiscordUID", {Default = "", Numeric = false, Finished = false, ClearTextOnFocus = true, Text = "User ID", Placeholder = "Your Discord user ID..."})
+GB.Tracker.Left.Config:AddDropdown("WebhookData", {Text = "Include Data", Values = {"Name","Stats","New Items","All Items"}, Default = nil, Multi = true, Searchable = true})
+GB.Tracker.Left.Config:AddDropdown("WebhookRarity", {Text = "Item Rarity Filter", Values = {"Common","Uncommon","Rare","Epic","Legendary","Mythical","Secret"}, Default = {"Common","Uncommon","Rare","Epic","Legendary","Mythical","Secret"}, Multi = true, Searchable = true})
+GB.Tracker.Left.Config:AddToggle("PingOnSend", {Text = "Ping on Send", Default = false})
+GB.Tracker.Left.Config:AddToggle("SendWebhook", {Text = "Enable Webhook", Default = false, Disabled = not Support.Webhook})
+GB.Tracker.Left.Config:AddSlider("WebhookInterval", {Text = "Send Every [x] Minutes", Default = 5, Min = 1, Max = 30, Rounding = 0})
+GB.Tracker.Left.Config:AddButton("Test Webhook", function() PostWebhook() end)
+
+-- Settings tab
+local SettingsBox = Tabs.Settings:AddLeftGroupbox("Interface", "cog")
+SettingsBox:AddToggle("AutoShowUI", {Text = "Auto Show UI on Inject", Default = true})
+SettingsBox:AddToggle("KeybindMenuOpen", {Default = Library.KeybindFrame.Visible, Text = "Show Keybind Menu", Callback = function(v) Library.KeybindFrame.Visible = v end})
+SettingsBox:AddToggle("ShowCustomCursor", {Text = "Custom Cursor", Default = false, Callback = function(v) Library.ShowCustomCursor = v end})
+SettingsBox:AddDropdown("NotifSide", {Values = {"Left","Right"}, Default = "Right", Text = "Notification Side", Callback = function(v) Library:SetNotifySide(v) end})
+SettingsBox:AddDropdown("DPIScale", {Values = {"50%","75%","100%","125%","150%","175%","200%"}, Default = "100%", Text = "UI Scale", Callback = function(v)
+    Library:SetDPIScale(tonumber(v:gsub("%%","")))
+end})
+SettingsBox:AddDivider()
+SettingsBox:AddLabel("Menu Keybind"):AddKeyPicker("MenuKeybind", {Default = "U", NoUI = true, Text = "Toggle UI"})
+SettingsBox:AddButton("Panic Stop", function() PanicStop() end)
+SettingsBox:AddButton("Unload Mini Hub", function()
+    getgenv().MiniHub_Running = false
+    Shared.Farm = false
+    Cleanup(Connections)
+    Cleanup(ActiveThreads)
+    Library:Unload()
+end)
+
+Library.ToggleKeybind = Options.MenuKeybind
+
+-- Wire up all toggle callbacks
+Toggles.SendWebhook:OnChanged(function(s) Thread("Webhook", Loop_WebhookSend, s) end)
+Toggles.LevelFarm:OnChanged(function(s) if not s then Shared.QuestNPC = "" end end)
+Toggles.ObsHaki:OnChanged(function(s) Thread("Haki", Loop_Haki, s) end)
+Toggles.ArmHaki:OnChanged(function(s) Thread("Haki", Loop_Haki, s) end)
+Toggles.ConqHaki:OnChanged(function(s) Thread("Haki", Loop_Haki, s) end)
+Toggles.AutoAttack:OnChanged(function(s) Thread("AutoAttack", SafeLoop("AutoAttack", Loop_AutoAttack), s) end)
+Toggles.KillAura:OnChanged(function(s) Thread("KillAura", Loop_KillAura, s) end)
+Toggles.AutoSkill:OnChanged(function(s) Thread("AutoSkill", SafeLoop("AutoSkill", Loop_AutoSkill), s) end)
+Toggles.AutoStats:OnChanged(function(s) Thread("AutoStats", SafeLoop("AutoStats", Loop_AutoStats), s) end)
+Toggles.AutoCombo:OnChanged(function(s) if not s then Shared.ComboIdx = 1 end Thread("AutoCombo", SafeLoop("Combo", Loop_AutoCombo), s) end)
+Toggles.AutoAscend:OnChanged(function(s)
+    if s then Remotes.ReqAscend:InvokeServer()
+    else Remotes.CloseAscend:FireServer() for i = 1, 10 do Lists.AscendLabels[i]:SetVisible(false) end end
+end)
+Toggles.AutoTrait:OnChanged(EnsureRollManager)
+Toggles.AutoRace:OnChanged(EnsureRollManager)
+Toggles.AutoClan:OnChanged(EnsureRollManager)
+Options.PickTrait:OnChanged(SyncTraitAutoSkip)
+Options.PickRace:OnChanged(SyncRaceSettings)
+Options.PickClan:OnChanged(SyncClanSettings)
+Options.PassiveWeapon:OnChanged(UpdatePassiveLabel)
+Options.PickPassive:OnChanged(function() end)
+Toggles.AutoSpecPassive:OnChanged(function(s) Thread("SpecPassive", SafeLoop("SpecPassive", Loop_SpecPassive), s) end)
+Toggles.AutoGemRoll:OnChanged(function(s) Thread("GemRoll", SafeLoop("GemRoll", Loop_GemRoll), s) end)
+Toggles.AutoSkillTree:OnChanged(function(s) Thread("SkillTree", SafeLoop("SkillTree", Loop_SkillTree), s) end)
+Toggles.ArtifactMilestone:OnChanged(function(s) Thread("ArtMilestone", Loop_ArtifactMilestone, s) end)
+Toggles.AutoEnchant:OnChanged(function(s) Thread("Enchant", SafeLoop("Enchant", function() UpgradeLoop("Enchant") end), s) end)
+Toggles.AutoEnchantAll:OnChanged(function(s) Thread("EnchantAll", SafeLoop("EnchantAll", function() UpgradeLoop("Enchant") end), s) end)
+Toggles.AutoBlessing:OnChanged(function(s) Thread("Blessing", SafeLoop("Blessing", function() UpgradeLoop("Blessing") end), s) end)
+Toggles.AutoBlessingAll:OnChanged(function(s) Thread("BlessingAll", SafeLoop("BlessingAll", function() UpgradeLoop("Blessing") end), s) end)
+Toggles.ArtifactLock:OnChanged(function(s) Thread("Art.Lock", SafeLoop("ArtSystem", Loop_ArtifactSystem), s) end)
+Toggles.ArtifactDelete:OnChanged(function(s) Thread("Art.Delete", SafeLoop("ArtSystem", Loop_ArtifactSystem), s) end)
+Toggles.ArtifactUpgrade:OnChanged(function(s) Thread("Art.Upgrade", SafeLoop("ArtSystem", Loop_ArtifactSystem), s) end)
+Toggles.AutoDungeon:OnChanged(function(s) Thread("Dungeon", Loop_Dungeon, s) end)
+Toggles.AutoShop:OnChanged(function(s) Thread("Shop", SafeLoop("Shop", Loop_AutoShop), s) end)
+Toggles.AutoChest:OnChanged(function(s) Thread("Chest", SafeLoop("Chest", Loop_AutoChest), s) end)
+Toggles.AutoCraft:OnChanged(function(s) Thread("Craft", SafeLoop("Craft", Loop_AutoCraft), s) end)
+Toggles.AutoQuestline:OnChanged(function(s) Thread("Questline", SafeLoop("Questline", function()
+    while Toggles.AutoQuestline.Value do task.wait(0.1) end
+end), s) end)
+Toggles.AntiKnockback:OnChanged(function(s) Thread("AntiKB", FuncAntiKB, s) end)
+Toggles.TPW:OnChanged(function(v) TPW_S:SetVisible(v) Thread("TPWalk", FuncSpeed, v) end)
+Toggles.Noclip:OnChanged(function(v) Thread("Noclip", FuncNoclip, v) end)
+Toggles.AutoReconnect:OnChanged(function(s) if s then FuncAutoReconnect() end end)
+Toggles.NoGameplayPaused:OnChanged(function(s) Thread("NoPause", SafeLoop("NoPause", FuncNoPause), s) end)
+Toggles.FPSBoost:OnChanged(ApplyFPSBoost)
+Toggles.Disable3D:OnChanged(function(v) RunService:Set3dRenderingEnabled(not v) end)
+Options.LimitFPSValue:OnChanged(function() if FPS_T.Value and Support.FPS then setfpscap(FPS_S.Value) end end)
+Toggles.LimitFPS:OnChanged(function(v) FPS_S:SetVisible(v) if not v and Support.FPS then setfpscap(999) end end)
+
+Options.PanicKey:OnClick(function() PanicStop() end)
+
+-- Connection: notification suppressor
+local NotifFrame = PGui:WaitForChild("NotificationUI"):WaitForChild("NotificationsFrame")
+local function SuppressNotif(frame)
+    task.delay(0.01, function()
+        if not Toggles.HideNotifs or not Toggles.HideNotifs.Value then return end
+        local txtLabel = frame:FindFirstChild("Txt", true)
+        if txtLabel and txtLabel:IsA("TextLabel") then
+            local blacklist = {"You don't have this item!", "Not enough "}
+            for _, phrase in ipairs(blacklist) do
+                if txtLabel.Text:lower():find(phrase:lower()) then frame.Visible = false break end
+            end
+        end
+    end)
+end
+NotifFrame.ChildAdded:Connect(SuppressNotif)
+for _, child in pairs(NotifFrame:GetChildren()) do SuppressNotif(child) end
+
+-- Add HideNotifs toggle to Settings
+SettingsBox:AddToggle("HideNotifs", {Text = "Hide Spam Notifications", Default = false})
+
+-- Main farm loop
+Connections.General = RunService.Stepped:Connect(function()
+    local Hum = Plr.Character and Plr.Character:FindFirstChildOfClass("Humanoid")
+    if Hum then
+        if Toggles.WS.Value then Hum.WalkSpeed = Options.WSValue.Value end
+        if Toggles.JP.Value then Hum.JumpPower = Options.JPValue.Value Hum.UseJumpPower = true end
+        if Toggles.HH.Value then Hum.HipHeight = Options.HHValue.Value end
+    end
+    workspace.Gravity = Toggles.Grav.Value and Options.GravValue.Value or 192
+    if Toggles.FOV.Value then workspace.CurrentCamera.FieldOfView = Options.FOVValue.Value end
+    if Toggles.Zoom.Value then Plr.CameraMaxZoomDistance = Options.ZoomValue.Value end
+end)
+
+task.spawn(function()
+    while task.wait() do
+        if Toggles.Fullbright.Value then Lighting.Brightness = 2 Lighting.ClockTime = 14 Lighting.GlobalShadows = false end
+        if Toggles.NoFog.Value then Lighting.FogEnd = 9e9 end
+        if Library.Unloaded then break end
+    end
+end)
+
+task.spawn(Loop_Trade)
+
+-- M1 + instakill loop
+task.spawn(function()
+    while true do
+        task.wait()
+        if Shared.AltActive or not Shared.Farm or Shared.MerchantBusy or not Shared.Target then continue end
+        local ok, err = pcall(function()
+            local char = GetCharacter()
+            local target = Shared.Target
+            if not target or not char then return end
+            local npcHum = target:FindFirstChildOfClass("Humanoid")
+            local npcRoot = target:FindFirstChild("HumanoidRootPart")
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if npcHum and npcRoot and root then
+                local hpPct = (npcHum.Health / npcHum.MaxHealth) * 100
+                local minMaxHP = tonumber(Options.InstakillMinHP.Value) or 0
+                local ikThreshold = tonumber(Options.InstakillHP.Value) or 90
+                if Toggles.Instakill.Value and npcHum.MaxHealth >= minMaxHP and hpPct < ikThreshold then
+                    npcHum.Health = 0
+                    if not target:FindFirstChild("IK_Active") then
+                        local tag = Instance.new("Folder") tag.Name = "IK_Active"
+                        tag:SetAttribute("TriggerTime", tick()) tag.Parent = target
+                    end
+                end
+                local currentDist = (root.Position - npcRoot.Position).Magnitude
+                if currentDist < 35 then
+                    local m1Delay = tonumber(Options.AttackSpeed.Value) or 0.2
+                    if tick() - Shared.LastM1 >= m1Delay then
+                        if Toggles.AutoWeapon.Value then EquipWeapon() end
+                        Remotes.M1:FireServer()
+                        Shared.LastM1 = tick()
+                    end
+                end
+            end
+        end)
+        if not ok then Library:Notify("ERROR: " .. tostring(err), 10) end
+    end
+end)
+
+-- Main target loop
+task.spawn(function()
+    while task.wait() do
+        if not Shared.Farm or Shared.MerchantBusy then Shared.Target = nil continue end
+        local char = GetCharacter()
+        if not char or Shared.Recovering then continue end
+        if Shared.TargetValid and (not Shared.Target or not Shared.Target.Parent or Shared.Target.Humanoid.Health <= 0) then
+            Shared.KillTick = tick()
+            Shared.TargetValid = false
+        end
+        HandleSummons()
+        local currentPity, maxPity = GetCurrentPity()
+        local isPityReady = Toggles.PityFarm.Value and currentPity >= (maxPity - 1)
+        local foundTask = false
+        if isPityReady then
+            local t, isl, fType = GetPityTarget()
+            if t then foundTask = true Shared.Target = t Shared.TargetValid = true UpdateSwitchState(t, fType) ExecuteFarm(t, isl, fType) end
+        end
+        if not foundTask then
+            for i = 1, #PriorityTasks do
+                local taskName = Options["SelectedPriority_" .. i].Value
+                if not taskName then continue end
+                if isPityReady and (taskName == "Boss" or taskName == "All Mob Farm" or taskName == "Mob") then continue end
+                local t, isl, fType = CheckTask(taskName)
+                if t then
+                    foundTask = true
+                    Shared.Target = (typeof(t) == "Instance") and t or nil
+                    Shared.TargetValid = true
+                    UpdateSwitchState(t, fType)
+                    if taskName ~= "Merchant" then ExecuteFarm(t, isl, fType) end
+                    break
+                end
+            end
+        end
+        if not foundTask then Shared.Target = nil UpdateSwitchState(nil, "None") end
+    end
+end)
+
+-- Recovery loop
+task.spawn(function()
+    while task.wait(1) do
+        if not getgenv().MiniHub_Running then break end
+        local char = GetCharacter()
+        local root = char and char:FindFirstChild("HumanoidRootPart")
+        if root and not Shared.MovingIsland then
+            local pos = root.Position
+            if pos.Y > 5000 or math.abs(pos.X) > 10000 or math.abs(pos.Z) > 10000 then
+                Shared.Recovering = true
+                Library:Notify("Out of bounds — recovering...", 5)
+                root.AssemblyLinearVelocity = Vector3.zero
+                root.AssemblyAngularVelocity = Vector3.zero
+                if IslandCrystals["Starter"] then root.CFrame = IslandCrystals["Starter"]:GetPivot() * CFrame.new(0, 5, 0) task.wait(1) end
+                Shared.Recovering = false
+            end
+        end
+    end
+end)
+
+-- Pity label updater
+task.spawn(function()
+    while task.wait(1) do
+        if not getgenv().MiniHub_Running then break end
+        pcall(function()
+            if PityLabel then
+                local c, m = GetCurrentPity()
+                PityLabel:SetText(string.format("<b>Pity:</b> %d/%d", c or 0, m or 25))
+            end
+        end)
+    end
+end)
+
+-- Anti AFK
+task.spawn(function()
+    DisableIdled()
+    while true do
+        task.wait(60)
+        if Toggles.AntiAFK and Toggles.AntiAFK.Value then
+            pcall(function()
+                VirtualUser:CaptureController()
+                VirtualUser:Button2Down(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+                task.wait(0.2)
+                VirtualUser:Button2Up(Vector2.new(0,0), workspace.CurrentCamera.CFrame)
+            end)
+        end
+    end
+end)
+
+-- Inventory sync
+task.spawn(function()
+    while getgenv().MiniHub_Running do
+        if Remotes.ReqInventory then Remotes.ReqInventory:FireServer() end
+        task.wait(30)
+    end
+end)
+
+-- ThemeManager / SaveManager
+ThemeManager:SetLibrary(Library)
+SaveManager:SetLibrary(Library)
+SaveManager:IgnoreThemeSettings()
+SaveManager:SetIgnoreIndexes({"PickIsland","PickQuestNPC","PickMiscNPC","PickAllNPC","PickMovesetNPC","PickMasteryNPC"})
+ThemeManager:SetFolder("MiniHub")
+SaveManager:SetFolder("MiniHub/SailorPiece")
+SaveManager:BuildConfigSection(Tabs.Settings)
+ThemeManager:ApplyToTab(Tabs.Settings)
+
+-- Set artifact dropdown values
+Options.LockType:SetValues(Modules.ArtifactConfig.Categories)
+Options.LockSet:SetValues(allArtSets)
+Options.LockMS:SetValues(allArtStats)
+Options.LockSS:SetValues(allArtStats)
+Options.DelType:SetValues(Modules.ArtifactConfig.Categories)
+Options.DelSet:SetValues(allArtSets)
+Options.DelMS_Body:SetValues(allArtStats)
+Options.DelMS_Boots:SetValues(allArtStats)
+Options.DelSS:SetValues(allArtStats)
+Options.UpgradeMS:SetValues(allArtStats)
+Options.EquipType:SetValues(Modules.ArtifactConfig.Categories)
+Options.EquipMS:SetValues(allArtStats)
+Options.EquipSS:SetValues(allArtStats)
+
+RefreshMobLists()
+RefreshEntityList()
+
+task.spawn(function()
+    if Remotes.ReqInventory then Remotes.ReqInventory:FireServer() end
+    local timeout = 0
+    while not Shared.InventorySynced and timeout < 5 do
+        task.wait(0.15) timeout = timeout + 0.15
+        if timeout == 1.5 then Remotes.ReqInventory:FireServer() end
+    end
+    SaveManager:LoadAutoloadConfig()
+end)
+
+if UIS.TouchEnabled and not UIS.KeyboardEnabled then
+    Library:SetDPIScale(75)
+    Library:Notify("Phone detected — UI resized.", 3)
+elseif UIS.KeyboardEnabled then
+    Library:SetDPIScale(100)
+    Library:Notify("Press " .. Options.MenuKeybind.Value .. " to toggle Mini Hub.", 10)
+end
+
+ThemeManager:LoadDefault()
+
+task.spawn(function()
+    task.wait(0.1)
+    if Toggles.AutoShowUI.Value == false then Library:Toggle() end
+end)
+
+Library:Notify("Mini Hub loaded!", 3)
+Library:Notify("discord.gg/2ezFB7bH5u", 5)
