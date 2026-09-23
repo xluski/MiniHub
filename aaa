@@ -1,0 +1,243 @@
+--[[
+    Key System for Roblox
+    -----------------------------------
+    - Checks player-entered key against a remote list (raw text/json URL)
+    - Saves a valid key locally so they don't re-enter every time
+    - Simple draggable GUI, no external UI libs needed
+
+    SETUP:
+    1. Host a plain text file somewhere with one key per line, e.g.:
+         KEY-ALPHA123
+         KEY-BETA456
+         KEY-GAMMA789
+       (GitHub raw file, Pastebin raw, gist raw, etc. all work)
+    2. Paste that raw URL into KEY_LIST_URL below.
+    3. Put this as a LocalScript (StarterPlayerScripts) or run it via your
+       loader/executor. On success, MAIN_SCRIPT_URL is loaded; edit that
+       part to point to your actual script, or replace the whole
+       onKeySuccess() function with your own code.
+]]
+
+local HttpService = game:GetService("HttpService")
+local Players = game:GetService("Players")
+local GuiService = game:GetService("GuiService")
+local player = Players.LocalPlayer or Players.PlayerAdded:Wait()
+
+----------------------------------------------------------------
+-- CONFIG
+----------------------------------------------------------------
+local DISCORD_LINK = "https://discord.gg/8qhXEAmD3"
+local VALID_KEYS = {
+    ["MiniHub2027!"] = true,
+}
+local MAIN_SCRIPT_URL = "loadstring(game:HttpGet("https://raw.githubusercontent.com/xluski/MiniHub/refs/heads/main/Egg"))()"
+local SAVE_KEY_LOCALLY = true -- uses writefile/readfile if your executor supports it
+local SAVE_FILE_NAME = "keysystem_savedkey.txt"
+
+----------------------------------------------------------------
+-- HELPERS
+----------------------------------------------------------------
+local function httpGet(url)
+    local ok, result = pcall(function()
+        if syn and syn.request then
+            return syn.request({Url = url, Method = "GET"}).Body
+        elseif http and http.request then
+            return http.request({Url = url, Method = "GET"}).Body
+        elseif request then
+            return request({Url = url, Method = "GET"}).Body
+        else
+            return game:HttpGet(url)
+        end
+    end)
+    if ok then return result end
+    return nil
+end
+
+local function fileExists(name)
+    return SAVE_KEY_LOCALLY and isfile and isfile(name)
+end
+
+local function loadSavedKey()
+    if fileExists(SAVE_FILE_NAME) then
+        local ok, data = pcall(readfile, SAVE_FILE_NAME)
+        if ok then return data end
+    end
+    return nil
+end
+
+local function saveKey(key)
+    if SAVE_KEY_LOCALLY and writefile then
+        pcall(writefile, SAVE_FILE_NAME, key)
+    end
+end
+
+local function isValidKey(key)
+    key = key:gsub("%s+", "")
+    if VALID_KEYS[key] then
+        return true
+    end
+    return false, "Invalid key."
+end
+
+local function openDiscord()
+    local ok = pcall(function()
+        if GuiService and GuiService.OpenBrowserWindowAsync then
+            GuiService:OpenBrowserWindowAsync(DISCORD_LINK)
+        else
+            error("no browser api")
+        end
+    end)
+    if not ok and setclipboard then
+        pcall(setclipboard, DISCORD_LINK)
+    end
+end
+
+local function onKeySuccess()
+    local code = httpGet(MAIN_SCRIPT_URL)
+    if code then
+        local func = loadstring(code)
+        if func then
+            func()
+        end
+    end
+end
+
+----------------------------------------------------------------
+-- GUI
+----------------------------------------------------------------
+local function buildGui()
+    local screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "KeySystemGui"
+    screenGui.ResetOnSpawn = false
+
+    local parented = pcall(function()
+        screenGui.Parent = game:GetService("CoreGui")
+    end)
+    if not parented then
+        screenGui.Parent = player:WaitForChild("PlayerGui")
+    end
+
+    local frame = Instance.new("Frame")
+    frame.Size = UDim2.new(0, 320, 0, 226)
+    frame.Position = UDim2.new(0.5, -160, 0.5, -113)
+    frame.BackgroundColor3 = Color3.fromRGB(28, 28, 34)
+    frame.BorderSizePixel = 0
+    frame.Active = true
+    frame.Draggable = true
+    frame.Parent = screenGui
+
+    local corner = Instance.new("UICorner")
+    corner.CornerRadius = UDim.new(0, 8)
+    corner.Parent = frame
+
+    local title = Instance.new("TextLabel")
+    title.Text = "Key System"
+    title.Font = Enum.Font.GothamBold
+    title.TextSize = 18
+    title.TextColor3 = Color3.fromRGB(255, 255, 255)
+    title.BackgroundTransparency = 1
+    title.Size = UDim2.new(1, 0, 0, 40)
+    title.Parent = frame
+
+    local discordBtn = Instance.new("TextButton")
+    discordBtn.Text = "Join Discord for code"
+    discordBtn.Font = Enum.Font.GothamBold
+    discordBtn.TextSize = 14
+    discordBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+    discordBtn.BackgroundColor3 = Color3.fromRGB(88, 101, 242) -- Discord blurple
+    discordBtn.Size = UDim2.new(1, -40, 0, 34)
+    discordBtn.Position = UDim2.new(0, 20, 0, 46)
+    local discordCorner = Instance.new("UICorner")
+    discordCorner.CornerRadius = UDim.new(0, 6)
+    discordCorner.Parent = discordBtn
+    discordBtn.Parent = frame
+
+    local input = Instance.new("TextBox")
+    input.PlaceholderText = "Enter key..."
+    input.Text = ""
+    input.Font = Enum.Font.Gotham
+    input.TextSize = 14
+    input.TextColor3 = Color3.fromRGB(255, 255, 255)
+    input.BackgroundColor3 = Color3.fromRGB(40, 40, 48)
+    input.Size = UDim2.new(1, -40, 0, 36)
+    input.Position = UDim2.new(0, 20, 0, 92)
+    input.ClearTextOnFocus = false
+    local inputCorner = Instance.new("UICorner")
+    inputCorner.CornerRadius = UDim.new(0, 6)
+    inputCorner.Parent = input
+    input.Parent = frame
+
+    local status = Instance.new("TextLabel")
+    status.Text = ""
+    status.Font = Enum.Font.Gotham
+    status.TextSize = 12
+    status.TextColor3 = Color3.fromRGB(255, 120, 120)
+    status.BackgroundTransparency = 1
+    status.Size = UDim2.new(1, -40, 0, 20)
+    status.Position = UDim2.new(0, 20, 0, 132)
+    status.TextWrapped = true
+    status.Parent = frame
+
+    local submit = Instance.new("TextButton")
+    submit.Text = "Submit"
+    submit.Font = Enum.Font.GothamBold
+    submit.TextSize = 14
+    submit.TextColor3 = Color3.fromRGB(255, 255, 255)
+    submit.BackgroundColor3 = Color3.fromRGB(80, 120, 255)
+    submit.Size = UDim2.new(1, -40, 0, 34)
+    submit.Position = UDim2.new(0, 20, 0, 160)
+    local submitCorner = Instance.new("UICorner")
+    submitCorner.CornerRadius = UDim.new(0, 6)
+    submitCorner.Parent = submit
+    submit.Parent = frame
+
+    local function attemptKey(key)
+        status.TextColor3 = Color3.fromRGB(200, 200, 200)
+        status.Text = "Checking..."
+        local valid, err = isValidKey(key)
+        if valid then
+            saveKey(key)
+            status.TextColor3 = Color3.fromRGB(120, 255, 150)
+            status.Text = "Key accepted!"
+            task.wait(0.5)
+            screenGui:Destroy()
+            onKeySuccess()
+        else
+            status.TextColor3 = Color3.fromRGB(255, 120, 120)
+            status.Text = err or "Invalid key."
+        end
+    end
+
+    discordBtn.MouseButton1Click:Connect(function()
+        openDiscord()
+        status.TextColor3 = Color3.fromRGB(180, 190, 255)
+        status.Text = "Discord opened (or link copied) — code is in there."
+    end)
+
+    submit.MouseButton1Click:Connect(function()
+        attemptKey(input.Text)
+    end)
+
+    input.FocusLost:Connect(function(enterPressed)
+        if enterPressed then
+            attemptKey(input.Text)
+        end
+    end)
+
+    return screenGui
+end
+
+----------------------------------------------------------------
+-- ENTRY POINT
+----------------------------------------------------------------
+local saved = loadSavedKey()
+if saved and saved ~= "" then
+    local valid = isValidKey(saved)
+    if valid then
+        onKeySuccess()
+    else
+        buildGui()
+    end
+else
+    buildGui()
+end
